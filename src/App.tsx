@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './components/ui/Toast';
 import { VehicleProvider, useVehicle } from './context/VehicleContext';
@@ -20,12 +20,20 @@ import { GarageManagerPage } from './pages/GarageManagerPage';
 import { ServiceDossierPage } from './pages/ServiceDossierPage';
 import { DocumentVaultPage } from './pages/DocumentVaultPage';
 import type { Vehicle } from './types';
+import { checkAndNotifyDueReminders } from './lib/notifications';
 
 function AppContent() {
-  const { activeVehicle, isLoading } = useVehicle();
+  const { activeVehicle, vehicles, reminders, settings, isLoading } = useVehicle();
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
   const [previousPage, setPreviousPage] = useState<string>('dashboard');
   const [vehicleToEdit, setVehicleToEdit] = useState<Vehicle | null>(null);
+
+  // Background check for due reminders & native notification alerts
+  useEffect(() => {
+    if (!isLoading && settings.notificationsEnabled && settings.reminderNotifications !== false) {
+      checkAndNotifyDueReminders(vehicles, reminders, settings);
+    }
+  }, [isLoading, vehicles, reminders, settings]);
 
   const navigateTo = (page: string) => {
     setPreviousPage(currentPage);

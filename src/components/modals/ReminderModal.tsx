@@ -5,7 +5,7 @@ import { Dialog } from '../ui/Dialog';
 import { Button } from '../ui/Button';
 import { Input, Select, Textarea } from '../ui/Input';
 import type { ReminderType } from '../../types';
-import { Bell, Gauge, Calendar } from 'lucide-react';
+import { Bell, Gauge, Calendar, BellOff } from 'lucide-react';
 
 interface ReminderModalProps {
   isOpen: boolean;
@@ -192,6 +192,21 @@ export function ReminderModal({ isOpen, onClose }: ReminderModalProps) {
             value={notes}
             onChange={e => setNotes(e.target.value)}
           />
+        </div>
+
+        {/* Notification Status Hint */}
+        <div className="p-2.5 rounded-lg border border-border bg-muted/30 text-[11px] text-muted-foreground flex items-center gap-2">
+          {settings.notificationsEnabled && settings.reminderNotifications !== false ? (
+            <>
+              <Bell className="w-3.5 h-3.5 text-foreground shrink-0" />
+              <span>Mobile notifications are active. You'll receive an alert when this milestone is reached.</span>
+            </>
+          ) : (
+            <>
+              <BellOff className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <span>Notifications are currently disabled. Enable them in Settings for mobile alerts.</span>
+            </>
+          )}
         </div>
 
         {/* Submit */}

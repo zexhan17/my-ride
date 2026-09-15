@@ -17,7 +17,9 @@
     "jsx": "react-jsx",
     "types": [
       "vitest/globals",
-      "@testing-library/jest-dom/vitest"
+      "@testing-library/jest-dom/vitest",
+      "vite/client",
+      "vite-plugin-pwa/client"
     ],
     /* Linting */
     "strict": true,

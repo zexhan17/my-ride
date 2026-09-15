@@ -44,6 +44,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   distanceUnit: 'km',
   fuelVolumeUnit: 'L',
   theme: 'dark',
+  notificationsEnabled: false,
+  reminderNotifications: true,
 };
 
 // Demo Vehicle IDs

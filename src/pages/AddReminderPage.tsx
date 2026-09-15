@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../co
 import { Button } from '../components/ui/Button';
 import { Input, Select, Textarea } from '../components/ui/Input';
 import type { ReminderType } from '../types';
-import { Bell, Gauge, Calendar, ArrowLeft } from 'lucide-react';
+import { Bell, Gauge, Calendar, ArrowLeft, BellOff } from 'lucide-react';
 
 interface AddReminderPageProps {
   onBack: () => void;
@@ -210,6 +210,21 @@ export function AddReminderPage({ onBack }: AddReminderPageProps) {
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
               />
+            </div>
+
+            {/* Notification Status Hint */}
+            <div className="p-3 rounded-lg border border-border bg-muted/30 text-xs text-muted-foreground flex items-center gap-2.5">
+              {settings.notificationsEnabled && settings.reminderNotifications !== false ? (
+                <>
+                  <Bell className="w-4 h-4 text-foreground shrink-0" />
+                  <span>Mobile alerts are active. You will receive a native notification when this maintenance is due.</span>
+                </>
+              ) : (
+                <>
+                  <BellOff className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span>Notifications are disabled. Enable native alerts in Settings to get mobile push reminders.</span>
+                </>
+              )}
             </div>
 
             {/* Form Actions */}

@@ -5,6 +5,7 @@ import { useToast } from '../components/ui/Toast';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Input';
+import { Badge } from '../components/ui/Badge';
 import {
   Sun,
   Moon,
@@ -18,8 +19,19 @@ import {
   Sparkles,
   Share2,
   FileSpreadsheet,
+  Bell,
+  BellRing,
+  BellOff,
+  AlertTriangle,
+  Info,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import {
+  isNotificationSupported,
+  getNotificationPermission,
+  requestNotificationPermission,
+  sendTestNotification,
+} from '../lib/notifications';
 
 export function SettingsPage() {
   const {
@@ -43,6 +55,67 @@ export function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | 'unsupported'>('default');
+  const [isSendingTest, setIsSendingTest] = useState(false);
+
+  useEffect(() => {
+    setNotifPermission(getNotificationPermission());
+  }, []);
+
+  const handleToggleNotifications = async (enable: boolean) => {
+    if (!isNotificationSupported()) {
+      error('Notifications not supported', 'Your browser or environment does not support the Notifications API.');
+      return;
+    }
+
+    if (enable) {
+      let currentPerm = getNotificationPermission();
+      if (currentPerm === 'default') {
+        currentPerm = await requestNotificationPermission();
+        setNotifPermission(currentPerm);
+      }
+
+      if (currentPerm === 'granted') {
+        await updateSettings({ notificationsEnabled: true });
+        success('Notifications enabled!', 'You will receive native alerts for vehicle maintenance milestones.');
+      } else if (currentPerm === 'denied') {
+        await updateSettings({ notificationsEnabled: false });
+        error('Permission Denied', 'Please allow notification permissions in your browser or device system settings.');
+      } else {
+        await updateSettings({ notificationsEnabled: false });
+        info('Notification permission was not granted.');
+      }
+    } else {
+      await updateSettings({ notificationsEnabled: false });
+      info('Notifications turned off.');
+    }
+  };
+
+  const handleToggleReminders = async (enable: boolean) => {
+    await updateSettings({ reminderNotifications: enable });
+    if (enable) {
+      info('Reminder notifications enabled.');
+    } else {
+      info('Reminder notifications paused.');
+    }
+  };
+
+  const handleSendTestNotification = async () => {
+    setIsSendingTest(true);
+    try {
+      const res = await sendTestNotification(activeVehicle?.name);
+      setNotifPermission(getNotificationPermission());
+      if (res.success) {
+        success('Test Alert Sent!', res.message);
+      } else {
+        error('Test Alert Failed', res.message);
+      }
+    } catch (err: any) {
+      error('Failed to send test notification', err.message);
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -171,7 +244,7 @@ export function SettingsPage() {
           <span>Settings</span>
         </h1>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Theme, measurement units, backup/restore, CSV export, and PWA installation
+          Theme, measurement units, notifications & reminders, backup/restore, CSV export, and PWA installation
         </p>
       </div>
 
@@ -286,7 +359,118 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 4. Demo Data & Backup / Restore */}
+      {/* 4. Notifications & Maintenance Alerts */}
+      <Card className="border-border">
+        <CardHeader className="p-4 sm:p-5 pb-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Bell className="w-4 h-4 text-muted-foreground" />
+                <span>Notifications & Maintenance Alerts</span>
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Native device alerts for upcoming vehicle service, PUC and insurance renewals
+              </CardDescription>
+            </div>
+            <div>
+              {!isNotificationSupported() ? (
+                <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                  Not Supported
+                </Badge>
+              ) : notifPermission === 'denied' ? (
+                <Badge variant="destructive" className="text-[10px] flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  Permission Blocked
+                </Badge>
+              ) : settings.notificationsEnabled && notifPermission === 'granted' ? (
+                <Badge variant="default" className="text-[10px] bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 font-medium">
+                  Active & Allowed
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                  Disabled
+                </Badge>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-5 pt-2 space-y-3.5">
+          {/* Main Notification Toggle */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg border border-border bg-muted/30">
+            <div className="text-xs space-y-0.5">
+              <p className="font-medium text-foreground flex items-center gap-1.5">
+                {settings.notificationsEnabled ? (
+                  <BellRing className="w-3.5 h-3.5 text-foreground" />
+                ) : (
+                  <BellOff className="w-3.5 h-3.5 text-muted-foreground" />
+                )}
+                <span>Enable Native Mobile Notifications</span>
+              </p>
+              <p className="text-muted-foreground">
+                Allows My Ride to deliver notifications for maintenance targets and milestone alerts.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant={settings.notificationsEnabled ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleToggleNotifications(!settings.notificationsEnabled)}
+                className="text-xs gap-1.5 h-8 min-w-[90px]"
+              >
+                {settings.notificationsEnabled ? 'Enabled' : 'Enable'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Sub-option: Reminder Alerts */}
+          {settings.notificationsEnabled && (
+            <div className="space-y-3 pl-1 pr-1">
+              <div className="flex items-center justify-between gap-3 py-1">
+                <div className="space-y-0.5 text-xs">
+                  <p className="font-medium text-foreground">Maintenance & Service Reminders</p>
+                  <p className="text-muted-foreground">
+                    Alert me when odometer targets are reached or calendar due dates are within 3 days.
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.reminderNotifications !== false}
+                  onChange={e => handleToggleReminders(e.target.checked)}
+                  className="w-4 h-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer shrink-0"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Test Notification Row */}
+          <div className="pt-2 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="text-xs text-muted-foreground">
+              <p className="font-medium text-foreground">Test Notification</p>
+              <p>Send an immediate test alert to verify banner, sound, and lock-screen alerts.</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSendTestNotification}
+              disabled={isSendingTest}
+              className="text-xs gap-1.5 h-8 shrink-0"
+            >
+              <BellRing className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>{isSendingTest ? 'Sending...' : 'Send Test Notification'}</span>
+            </Button>
+          </div>
+
+          {/* iOS / Mobile Tip */}
+          <div className="p-2.5 rounded-lg border border-border bg-card text-[11px] text-muted-foreground flex items-start gap-2">
+            <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-muted-foreground" />
+            <p>
+              <strong className="text-foreground">Mobile Note:</strong> On iOS (iPhone/iPad), Web Push requires adding My Ride to your Home Screen first (iOS 16.4+). On Android, notifications work both in browser and installed PWA mode.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 5. Demo Data & Backup / Restore */}
       <Card className="border-border">
         <CardHeader className="p-4 sm:p-5 pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">

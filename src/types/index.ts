@@ -120,6 +120,8 @@ export interface UserSettings {
   fuelVolumeUnit: 'L' | 'gal';
   activeVehicleId?: string;
   theme: 'dark' | 'light' | 'system';
+  notificationsEnabled?: boolean;
+  reminderNotifications?: boolean;
 }
 
 export type ActivityItem = {
