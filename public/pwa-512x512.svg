@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Card -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  <rect x="8" y="8" width="496" height="496" rx="120" stroke="url(#accentGrad)" stroke-width="4" fill="none" opacity="0.4"/>
+  
+  <!-- Motorcycle / Speedometer Stylized Logo -->
+  <!-- Outer Speedometer Arc -->
+  <path d="M120 320 A 150 150 0 1 1 392 320" fill="none" stroke="#334155" stroke-width="24" stroke-linecap="round"/>
+  <path d="M120 320 A 150 150 0 1 1 340 180" fill="none" stroke="url(#accentGrad)" stroke-width="24" stroke-linecap="round"/>
+  
+  <!-- Dial Center -->
+  <circle cx="256" cy="280" r="32" fill="#0f172a" stroke="url(#accentGrad)" stroke-width="12"/>
+  
+  <!-- Needle -->
+  <polygon points="256,248 262,170 250,170" fill="#38bdf8"/>
+  <line x1="256" y1="280" x2="330" y2="190" stroke="#38bdf8" stroke-width="10" stroke-linecap="round"/>
+  
+  <!-- Bike silhouette & Wrench / Fuel Drop Symbol -->
+  <path d="M180 370 L220 370 L256 410 L300 370 L340 370" fill="none" stroke="url(#accentGrad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="200" cy="400" r="28" fill="none" stroke="#38bdf8" stroke-width="10"/>
+  <circle cx="312" cy="400" r="28" fill="none" stroke="#6366f1" stroke-width="10"/>
+  
+  <!-- Brand text -->
+  <text x="256" y="470" font-family="system-ui, -apple-system, sans-serif" font-size="34" font-weight="800" fill="#f8fafc" text-anchor="middle" letter-spacing="4">MY RIDE</text>
+</svg>
+
