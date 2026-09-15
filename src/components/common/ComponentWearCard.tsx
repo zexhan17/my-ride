@@ -136,13 +136,12 @@ export function ComponentWearCard() {
                 return (
                   <div
                     key={item.id}
-                    className={`p-3.5 rounded-xl border transition-all ${
-                      isOverdue
+                    className={`p-3.5 rounded-xl border transition-all ${isOverdue
                         ? 'border-destructive/40 bg-destructive/5'
                         : isWarn
-                        ? 'border-amber-500/40 bg-amber-500/5'
-                        : 'border-border bg-card'
-                    }`}
+                          ? 'border-amber-500/40 bg-amber-500/5'
+                          : 'border-border bg-card'
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
@@ -196,13 +195,12 @@ export function ComponentWearCard() {
                             : '0 left'}
                         </span>
                         <span
-                          className={`font-mono font-bold ${
-                            isOverdue
+                          className={`font-mono font-bold ${isOverdue
                               ? 'text-destructive'
                               : isWarn
-                              ? 'text-amber-500'
-                              : 'text-foreground'
-                          }`}
+                                ? 'text-amber-500'
+                                : 'text-foreground'
+                            }`}
                         >
                           {item.percentageRemaining}% Life
                         </span>
@@ -210,13 +208,12 @@ export function ComponentWearCard() {
 
                       <div className="w-full h-2 rounded-full bg-muted overflow-hidden border border-border/40">
                         <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            isOverdue
+                          className={`h-full rounded-full transition-all duration-500 ${isOverdue
                               ? 'bg-destructive'
                               : isWarn
-                              ? 'bg-amber-500'
-                              : 'bg-foreground'
-                          }`}
+                                ? 'bg-amber-500'
+                                : 'bg-foreground'
+                            }`}
                           style={{ width: `${Math.max(0, Math.min(100, item.percentageRemaining))}%` }}
                         />
                       </div>

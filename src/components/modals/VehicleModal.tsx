@@ -41,7 +41,6 @@ export function VehicleModal({ isOpen, onClose, vehicleToEdit }: VehicleModalPro
   const [colorHex, setColorHex] = useState('#38bdf8');
   const [fuelType, setFuelType] = useState<FuelType>('petrol');
   const [tankCapacityLiters, setTankCapacityLiters] = useState('');
-  const [initialOdometer, setInitialOdometer] = useState('');
   const [currentOdometer, setCurrentOdometer] = useState('');
   const [purchaseDate, setPurchaseDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,7 +57,6 @@ export function VehicleModal({ isOpen, onClose, vehicleToEdit }: VehicleModalPro
         setColorHex(vehicleToEdit.colorHex || '#38bdf8');
         setFuelType(vehicleToEdit.fuelType);
         setTankCapacityLiters(vehicleToEdit.tankCapacityLiters ? String(vehicleToEdit.tankCapacityLiters) : '');
-        setInitialOdometer(String(vehicleToEdit.initialOdometer));
         setCurrentOdometer(String(vehicleToEdit.currentOdometer));
         setPurchaseDate(vehicleToEdit.purchaseDate || '');
       } else {
@@ -72,7 +70,6 @@ export function VehicleModal({ isOpen, onClose, vehicleToEdit }: VehicleModalPro
         setColorHex('#38bdf8');
         setFuelType('petrol');
         setTankCapacityLiters('13');
-        setInitialOdometer('0');
         setCurrentOdometer('0');
         setPurchaseDate('');
       }
@@ -87,8 +84,7 @@ export function VehicleModal({ isOpen, onClose, vehicleToEdit }: VehicleModalPro
       return;
     }
 
-    const initOdoNum = parseFloat(initialOdometer) || 0;
-    const currOdoNum = parseFloat(currentOdometer) || initOdoNum;
+    const currOdoNum = parseFloat(currentOdometer) || 0;
     const tankNum = tankCapacityLiters ? parseFloat(tankCapacityLiters) : undefined;
     const yearNum = year ? parseInt(year, 10) : undefined;
 
@@ -106,8 +102,8 @@ export function VehicleModal({ isOpen, onClose, vehicleToEdit }: VehicleModalPro
           colorHex,
           fuelType,
           tankCapacityLiters: tankNum,
-          initialOdometer: initOdoNum,
-          currentOdometer: Math.max(initOdoNum, currOdoNum),
+          initialOdometer: vehicleToEdit.initialOdometer ?? 0,
+          currentOdometer: currOdoNum,
           purchaseDate: purchaseDate || undefined,
         });
         success('Vehicle updated!', name);
@@ -122,8 +118,8 @@ export function VehicleModal({ isOpen, onClose, vehicleToEdit }: VehicleModalPro
           colorHex,
           fuelType,
           tankCapacityLiters: tankNum,
-          initialOdometer: initOdoNum,
-          currentOdometer: Math.max(initOdoNum, currOdoNum),
+          initialOdometer: 0,
+          currentOdometer: currOdoNum,
           purchaseDate: purchaseDate || undefined,
         });
         success('New vehicle added to your garage!', name);
@@ -287,42 +283,21 @@ export function VehicleModal({ isOpen, onClose, vehicleToEdit }: VehicleModalPro
           </div>
         </div>
 
-        {/* Odometer Initial & Current */}
-        <div className="p-3.5 rounded-xl border border-border/80 bg-muted/20 space-y-3">
-          <span className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <Gauge className="w-4 h-4 text-sky-500" />
-            <span>Odometer / Mileage Setup ({settings.distanceUnit})</span>
-          </span>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                Purchase / Start Odometer
-              </label>
-              <Input
-                type="number"
-                step="any"
-                placeholder="0"
-                value={initialOdometer}
-                onChange={e => setInitialOdometer(e.target.value)}
-                className="font-mono"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                Current Meter Reading
-              </label>
-              <Input
-                type="number"
-                step="any"
-                placeholder="e.g. 5000"
-                value={currentOdometer}
-                onChange={e => setCurrentOdometer(e.target.value)}
-                className="font-mono font-bold"
-              />
-            </div>
-          </div>
+        {/* Current Odometer */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <Gauge className="w-3.5 h-3.5 text-muted-foreground" />
+            <span>Current Meter Reading ({settings.distanceUnit}) *</span>
+          </label>
+          <Input
+            type="number"
+            step="any"
+            placeholder="e.g. 5000"
+            value={currentOdometer}
+            onChange={e => setCurrentOdometer(e.target.value)}
+            className="font-mono font-medium"
+            required
+          />
         </div>
 
         {/* Submit */}

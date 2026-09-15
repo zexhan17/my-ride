@@ -143,11 +143,10 @@ export function DocumentVaultModal({ isOpen, onClose }: DocumentVaultModalProps)
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`text-xs px-2.5 py-1 rounded-md transition-colors whitespace-nowrap ${
-                    activeCategory === cat.id
+                  className={`text-xs px-2.5 py-1 rounded-md transition-colors whitespace-nowrap ${activeCategory === cat.id
                       ? 'bg-foreground text-background font-semibold'
                       : 'bg-muted/60 text-muted-foreground hover:text-foreground'
-                  }`}
+                    }`}
                 >
                   {cat.label}
                 </button>

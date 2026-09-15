@@ -71,11 +71,10 @@ export function GarageComparisonMatrix() {
                   <tr
                     key={item.vehicle.id}
                     onClick={() => setActiveVehicleId(item.vehicle.id)}
-                    className={`cursor-pointer transition-colors ${
-                      isSelected
+                    className={`cursor-pointer transition-colors ${isSelected
                         ? 'bg-primary/5 font-medium'
                         : 'hover:bg-muted/30'
-                    }`}
+                      }`}
                   >
                     <td className="p-3 whitespace-nowrap">
                       <div className="flex items-center gap-2">
@@ -134,3 +133,4 @@ export function GarageComparisonMatrix() {
     </Card>
   );
 }
+
