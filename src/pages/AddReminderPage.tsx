@@ -213,11 +213,21 @@ export function AddReminderPage({ onBack }: AddReminderPageProps) {
             </div>
 
             {/* Form Actions */}
-            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-border">
-              <Button type="button" variant="outline" onClick={onBack} disabled={isSubmitting}>
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-4 border-t border-border">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onBack}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto h-11 sm:h-9 text-xs sm:text-sm"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full sm:w-auto sm:min-w-[130px] h-11 sm:h-9 text-xs sm:text-sm font-semibold"
+              >
                 {isSubmitting ? 'Saving...' : 'Set Reminder'}
               </Button>
             </div>

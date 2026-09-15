@@ -12,7 +12,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer',
+          'inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer touch-manipulation active:scale-[0.98]',
           {
             // Variants
             'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90': variant === 'default' || variant === 'glow',
@@ -22,10 +22,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             'hover:bg-accent hover:text-accent-foreground': variant === 'ghost',
             'text-primary underline-offset-4 hover:underline': variant === 'link',
             // Sizes
-            'h-9 px-4 py-2 text-xs sm:text-sm': size === 'default',
-            'h-8 rounded-md px-3 text-xs': size === 'sm',
-            'h-10 rounded-md px-6 text-sm font-semibold': size === 'lg',
-            'h-8 w-8 p-0': size === 'icon',
+            'h-10 sm:h-9 px-4 py-2 text-xs sm:text-sm': size === 'default',
+            'h-9 sm:h-8 rounded-md px-3 text-xs': size === 'sm',
+            'h-11 sm:h-10 rounded-md px-6 text-sm font-semibold': size === 'lg',
+            'h-9 w-9 sm:h-8 sm:w-8 p-0 shrink-0': size === 'icon',
           },
           className
         )}

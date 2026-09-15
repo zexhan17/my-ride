@@ -150,8 +150,8 @@ export function GarageManagerPage({
                   <div
                     key={v.id}
                     className={`p-4 rounded-xl border transition-all ${isActive
-                        ? 'border-foreground bg-muted/40 shadow-xs'
-                        : 'border-border bg-card hover:bg-muted/20'
+                      ? 'border-foreground bg-muted/40 shadow-xs'
+                      : 'border-border bg-card hover:bg-muted/20'
                       }`}
                   >
                     <div className="flex items-start justify-between gap-3">

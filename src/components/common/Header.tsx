@@ -80,7 +80,7 @@ export function Header({
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-border bg-card hover:bg-muted text-foreground text-xs sm:text-sm font-medium transition-colors max-w-[200px] sm:max-w-[280px]"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-foreground text-xs sm:text-sm font-medium transition-all max-w-[200px] sm:max-w-[280px] touch-manipulation active:scale-95 cursor-pointer h-9 sm:h-8"
               >
                 <div
                   className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-border"
@@ -92,7 +92,7 @@ export function Header({
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0 ml-auto" />
               </button>
             ) : (
-              <Button size="sm" variant="outline" onClick={onOpenAddVehicle} className="gap-1.5 h-8">
+              <Button size="sm" variant="outline" onClick={onOpenAddVehicle} className="gap-1.5 h-9 sm:h-8">
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Vehicle</span>
               </Button>
@@ -100,12 +100,12 @@ export function Header({
 
             {/* Dropdown Menu */}
             {isDropdownOpen && (
-              <div className="absolute left-0 mt-1.5 w-64 sm:w-72 rounded-lg border border-border bg-popover p-1 shadow-lg z-50 animate-in fade-in-50 zoom-in-95">
-                <div className="px-2 py-1.5 text-[11px] font-medium text-muted-foreground">
-                  Garage ({vehicles.length})
+              <div className="absolute left-0 mt-2 w-72 sm:w-80 rounded-xl border border-border bg-popover p-1.5 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+                <div className="px-2.5 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Garage Fleet ({vehicles.length})
                 </div>
 
-                <div className="max-h-60 overflow-y-auto space-y-0.5 py-0.5">
+                <div className="max-h-64 overflow-y-auto space-y-1 py-0.5 no-scrollbar">
                   {vehicles.map(v => {
                     const isSelected = v.id === activeVehicle?.id;
                     return (
@@ -116,40 +116,42 @@ export function Header({
                           setActiveVehicleId(v.id);
                           setIsDropdownOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between p-2 rounded-md text-left text-xs transition-colors ${isSelected
-                            ? 'bg-muted text-foreground font-medium'
-                            : 'hover:bg-muted/60 text-muted-foreground hover:text-foreground'
+                        className={`w-full flex items-center justify-between p-2.5 rounded-lg text-left text-xs transition-all touch-manipulation active:scale-[0.99] cursor-pointer ${isSelected
+                          ? 'bg-muted text-foreground font-semibold shadow-xs'
+                          : 'hover:bg-muted/60 text-muted-foreground hover:text-foreground'
                           }`}
                       >
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center gap-2.5 min-w-0">
                           <div
-                            className="w-2 h-2 rounded-full shrink-0"
+                            className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-border"
                             style={{ backgroundColor: v.colorHex || '#38bdf8' }}
                           />
-                          {getVehicleIcon(v.type)}
+                          <div className="p-1 rounded-md bg-background/80 shrink-0">
+                            {getVehicleIcon(v.type)}
+                          </div>
                           <div className="min-w-0">
-                            <p className="truncate text-xs">{v.name}</p>
+                            <p className="truncate text-xs font-medium text-foreground">{v.name}</p>
                             <p className="text-[10px] text-muted-foreground font-mono">
                               {v.registrationNumber || `${v.currentOdometer.toLocaleString()} km`}
                             </p>
                           </div>
                         </div>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-foreground shrink-0" />}
+                        {isSelected && <Check className="w-4 h-4 text-foreground shrink-0" />}
                       </button>
                     );
                   })}
                 </div>
 
-                <div className="border-t border-border mt-1 pt-1 space-y-0.5">
+                <div className="border-t border-border mt-1.5 pt-1.5 space-y-1">
                   <button
                     type="button"
                     onClick={() => {
                       setIsDropdownOpen(false);
                       onOpenAddVehicle();
                     }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-foreground hover:bg-muted transition-colors"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-foreground hover:bg-muted transition-colors touch-manipulation active:scale-[0.99]"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3.5 h-3.5 text-muted-foreground" />
                     <span>Add New Vehicle</span>
                   </button>
 
@@ -159,10 +161,10 @@ export function Header({
                       setIsDropdownOpen(false);
                       onOpenManageVehicles();
                     }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation active:scale-[0.99]"
                   >
                     {getVehicleIcon(activeVehicle?.type)}
-                    <span>Manage All Vehicles</span>
+                    <span>Manage Garage Fleet</span>
                   </button>
                 </div>
               </div>
@@ -184,8 +186,8 @@ export function Header({
               type="button"
               onClick={() => onNavigate(tab.id)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${currentPage === tab.id
-                  ? 'bg-muted text-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                ? 'bg-muted text-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
                 }`}
             >
               {tab.label}
@@ -199,7 +201,7 @@ export function Header({
             variant="ghost"
             size="icon"
             onClick={() => setTheme(isDark ? 'light' : 'dark')}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground"
             title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -209,7 +211,7 @@ export function Header({
             variant={currentPage === 'settings' ? 'secondary' : 'ghost'}
             size="icon"
             onClick={() => onNavigate('settings')}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground"
             title="Settings & Data Management"
           >
             <SettingsIcon className="w-4 h-4" />

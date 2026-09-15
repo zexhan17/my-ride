@@ -55,14 +55,25 @@
     @apply border-border;
   }
 
+  html {
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    overscroll-behavior-y: none;
+  }
+
+  button, a, input, select, textarea {
+    touch-action: manipulation;
   }
 }
 
-/* Utilities for hiding scrollbars */
+/* Utilities for hiding scrollbars and touch scrolling */
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -73,14 +84,19 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
-/* Safe area insets for iOS standalone PWA */
+/* Safe area insets for mobile & iOS standalone PWA */
 .pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 1rem);
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
 }
 
 .pt-safe {
-  padding-top: env(safe-area-inset-top, 0.5rem);
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0.5rem));
+}
+
+.bottom-safe {
+  bottom: env(safe-area-inset-bottom, 0px);
 }

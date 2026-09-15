@@ -147,7 +147,7 @@ export function DashboardPage({
             size="sm"
             variant="outline"
             onClick={onOpenAddFuel}
-            className="gap-1.5 text-xs h-8"
+            className="gap-1.5 text-xs h-9 sm:h-8"
           >
             <Fuel className="w-3.5 h-3.5" />
             <span>Log Petrol</span>
@@ -157,7 +157,7 @@ export function DashboardPage({
             size="sm"
             variant="outline"
             onClick={onOpenAddService}
-            className="gap-1.5 text-xs h-8"
+            className="gap-1.5 text-xs h-9 sm:h-8"
           >
             <Wrench className="w-3.5 h-3.5" />
             <span>Log Service</span>
@@ -167,7 +167,7 @@ export function DashboardPage({
             size="sm"
             variant="outline"
             onClick={onOpenAddExpense}
-            className="gap-1.5 text-xs h-8"
+            className="gap-1.5 text-xs h-9 sm:h-8"
           >
             <Receipt className="w-3.5 h-3.5" />
             <span>Add Expense</span>
@@ -177,7 +177,7 @@ export function DashboardPage({
             size="sm"
             variant="secondary"
             onClick={onOpenVault}
-            className="gap-1.5 text-xs h-8"
+            className="gap-1.5 text-xs h-9 sm:h-8"
           >
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Document Vault</span>
@@ -187,7 +187,7 @@ export function DashboardPage({
             size="sm"
             variant="secondary"
             onClick={onOpenDossier}
-            className="gap-1.5 text-xs h-8"
+            className="gap-1.5 text-xs h-9 sm:h-8"
           >
             <FileText className="w-3.5 h-3.5" />
             <span>Digital Dossier</span>

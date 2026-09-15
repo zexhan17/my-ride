@@ -267,13 +267,13 @@ export function DocumentVaultPage({ onBack }: DocumentVaultPageProps) {
                 </button>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setShowUploadForm(false)}
-                  className="text-xs"
+                  className="text-xs h-10 sm:h-8 w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
@@ -281,7 +281,7 @@ export function DocumentVaultPage({ onBack }: DocumentVaultPageProps) {
                   type="submit"
                   size="sm"
                   disabled={isUploading}
-                  className="text-xs min-w-[100px]"
+                  className="text-xs h-10 sm:h-8 w-full sm:w-auto min-w-[120px]"
                 >
                   {isUploading ? 'Saving...' : 'Save Document'}
                 </Button>
@@ -309,7 +309,7 @@ export function DocumentVaultPage({ onBack }: DocumentVaultPageProps) {
                   >
                     {/* Thumbnail / Image preview */}
                     <div
-                      className="h-36 bg-muted/40 flex items-center justify-center overflow-hidden cursor-pointer relative"
+                      className="h-36 bg-muted/40 flex items-center justify-center overflow-hidden cursor-pointer relative touch-manipulation active:opacity-90"
                       onClick={() => setSelectedDocForPreview(doc)}
                     >
                       {isImage ? (
@@ -323,15 +323,15 @@ export function DocumentVaultPage({ onBack }: DocumentVaultPageProps) {
                       )}
 
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity">
-                        <span className="text-xs text-white font-medium flex items-center gap-1 bg-black/60 px-2 py-1 rounded-md">
+                        <span className="text-xs text-white font-medium flex items-center gap-1 bg-black/60 px-2.5 py-1 rounded-lg">
                           <Eye className="w-3.5 h-3.5" />
-                          <span>Preview</span>
+                          <span>Tap to Preview</span>
                         </span>
                       </div>
                     </div>
 
                     {/* Metadata */}
-                    <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
+                    <div className="p-3.5 flex-1 flex flex-col justify-between space-y-2.5">
                       <div>
                         <div className="flex items-start justify-between gap-1">
                           <h4 className="font-semibold text-xs text-foreground truncate" title={doc.title}>
@@ -353,11 +353,11 @@ export function DocumentVaultPage({ onBack }: DocumentVaultPageProps) {
                           <Calendar className="w-3 h-3 text-muted-foreground" />
                           <span className="text-muted-foreground">Expires: {formatDate(doc.expiryDate)}</span>
                           <span
-                            className={`ml-auto font-semibold px-1 rounded ${daysInfo.isOverdue
+                            className={`ml-auto font-semibold px-1.5 py-0.5 rounded ${daysInfo.isOverdue
                                 ? 'text-destructive bg-destructive/10'
                                 : daysInfo.days <= 30
                                   ? 'text-amber-500 bg-amber-500/10'
-                                  : 'text-muted-foreground'
+                                  : 'text-muted-foreground bg-muted'
                               }`}
                           >
                             {daysInfo.label}
@@ -375,8 +375,9 @@ export function DocumentVaultPage({ onBack }: DocumentVaultPageProps) {
                             size="icon"
                             variant="ghost"
                             onClick={() => handleDownload(doc)}
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                            title="Download"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            title="Download Document"
+                            aria-label="Download Document"
                           >
                             <Download className="w-3.5 h-3.5" />
                           </Button>
@@ -384,8 +385,9 @@ export function DocumentVaultPage({ onBack }: DocumentVaultPageProps) {
                             size="icon"
                             variant="ghost"
                             onClick={() => handleDelete(doc)}
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            title="Delete"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            title="Delete Document"
+                            aria-label="Delete Document"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>

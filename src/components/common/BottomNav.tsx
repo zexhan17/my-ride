@@ -33,7 +33,7 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t border-border pb-safe">
-      <div className="grid grid-cols-5 h-13 items-center px-1">
+      <div className="grid grid-cols-5 h-14 items-center px-1.5">
         {navItems.map(item => {
           const Icon = item.icon;
           const isActive = activeTabId === item.id;
@@ -43,19 +43,22 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
               type="button"
               onClick={() => onNavigate(item.id)}
               className={cn(
-                'flex flex-col items-center justify-center h-full py-1 transition-colors select-none',
-                isActive ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'
+                'flex flex-col items-center justify-center h-full py-1 transition-all select-none touch-manipulation active:scale-95 cursor-pointer',
+                isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
               )}
+              aria-label={item.label}
             >
               <div
                 className={cn(
-                  'p-1 rounded-md transition-transform',
-                  isActive && 'text-foreground'
+                  'px-3 py-1 rounded-full transition-all flex items-center justify-center',
+                  isActive ? 'bg-muted text-foreground' : 'text-muted-foreground'
                 )}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className={cn('w-4 h-4 transition-transform', isActive && 'scale-110')} />
               </div>
-              <span className="text-[10px] tracking-tight">{item.label}</span>
+              <span className={cn('text-[10px] tracking-tight mt-0.5 leading-tight', isActive ? 'font-bold text-foreground' : 'font-medium')}>
+                {item.label}
+              </span>
             </button>
           );
         })}

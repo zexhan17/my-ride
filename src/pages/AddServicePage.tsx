@@ -214,7 +214,7 @@ export function AddServicePage({ onBack }: AddServicePageProps) {
               <label className="text-xs font-medium text-foreground block">
                 Work Done / Categories *
               </label>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {SERVICE_TYPE_OPTIONS.map(opt => {
                   const isSelected = selectedTypes.includes(opt.id);
                   return (
@@ -222,8 +222,8 @@ export function AddServicePage({ onBack }: AddServicePageProps) {
                       key={opt.id}
                       type="button"
                       onClick={() => toggleType(opt.id)}
-                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors select-none ${isSelected
-                          ? 'border-foreground bg-muted text-foreground font-medium'
+                      className={`text-xs px-3 py-1.5 rounded-lg border transition-all select-none touch-manipulation active:scale-95 cursor-pointer ${isSelected
+                          ? 'border-foreground bg-muted text-foreground font-semibold shadow-xs'
                           : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/50'
                         }`}
                     >
@@ -243,7 +243,7 @@ export function AddServicePage({ onBack }: AddServicePageProps) {
                     <button
                       type="button"
                       onClick={autoFillTotalFromParts}
-                      className="text-[11px] text-muted-foreground hover:text-foreground font-medium flex items-center gap-1"
+                      className="text-[11px] text-muted-foreground hover:text-foreground font-medium flex items-center gap-1 touch-manipulation"
                     >
                       <Calculator className="w-3 h-3" />
                       <span>Auto-Sum ({formatAmount(calculateSumOfParts())})</span>
@@ -286,7 +286,7 @@ export function AddServicePage({ onBack }: AddServicePageProps) {
                   variant="outline"
                   size="sm"
                   onClick={addPartRow}
-                  className="h-7 text-xs gap-1"
+                  className="h-8 text-xs gap-1"
                 >
                   <Plus className="w-3 h-3" />
                   <span>Add Part</span>
@@ -301,7 +301,7 @@ export function AddServicePage({ onBack }: AddServicePageProps) {
                         placeholder="Part name (e.g. Motul 7100 1.5L)"
                         value={part.name}
                         onChange={e => updatePart(part.id, 'name', e.target.value)}
-                        className="h-8 text-xs flex-1"
+                        className="h-10 sm:h-9 text-xs sm:text-sm flex-1"
                       />
                       <Input
                         type="number"
@@ -309,16 +309,18 @@ export function AddServicePage({ onBack }: AddServicePageProps) {
                         placeholder="Cost"
                         value={part.cost || ''}
                         onChange={e => updatePart(part.id, 'cost', parseFloat(e.target.value) || 0)}
-                        className="h-8 text-xs w-28 font-mono"
+                        className="h-10 sm:h-9 text-xs sm:text-sm w-24 sm:w-28 font-mono"
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
                         onClick={() => removePartRow(part.id)}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                        className="h-10 w-10 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive shrink-0"
+                        title="Remove part"
+                        aria-label="Remove part"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
@@ -326,7 +328,7 @@ export function AddServicePage({ onBack }: AddServicePageProps) {
               )}
 
               {/* Labor charge */}
-              <div className="pt-2 border-t border-border flex items-center justify-between">
+              <div className="pt-2 border-t border-border flex items-center justify-between gap-2">
                 <span className="text-xs text-muted-foreground">Labor / Labor Charges:</span>
                 <Input
                   type="number"
@@ -334,7 +336,7 @@ export function AddServicePage({ onBack }: AddServicePageProps) {
                   placeholder="0"
                   value={laborCost}
                   onChange={e => setLaborCost(e.target.value)}
-                  className="h-8 text-xs w-32 font-mono"
+                  className="h-10 sm:h-9 text-xs sm:text-sm w-28 sm:w-32 font-mono"
                 />
               </div>
             </div>
@@ -351,11 +353,21 @@ export function AddServicePage({ onBack }: AddServicePageProps) {
             </div>
 
             {/* Form Actions */}
-            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-border">
-              <Button type="button" variant="outline" onClick={onBack} disabled={isSubmitting}>
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-4 border-t border-border">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onBack}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto h-11 sm:h-9 text-xs sm:text-sm"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full sm:w-auto sm:min-w-[130px] h-11 sm:h-9 text-xs sm:text-sm font-semibold"
+              >
                 {isSubmitting ? 'Saving...' : 'Save Service Record'}
               </Button>
             </div>

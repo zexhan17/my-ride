@@ -83,8 +83,9 @@ export function TimelineItem({ item }: TimelineItemProps) {
             <button
               type="button"
               onClick={handleDelete}
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-muted"
+              className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-muted touch-manipulation active:scale-90 cursor-pointer"
               title="Delete record"
+              aria-label="Delete record"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>

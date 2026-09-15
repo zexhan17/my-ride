@@ -241,8 +241,9 @@ export function FuelPage({ onOpenAddFuel }: FuelPageProps) {
                     <button
                       type="button"
                       onClick={() => handleDelete(record.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-muted"
+                      className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-muted touch-manipulation active:scale-90 cursor-pointer"
                       title="Delete fuel log"
+                      aria-label="Delete fuel log"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

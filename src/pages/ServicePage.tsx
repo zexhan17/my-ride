@@ -258,8 +258,9 @@ export function ServicePage({ onOpenAddService, onOpenDossier }: ServicePageProp
                       <button
                         type="button"
                         onClick={() => handleDelete(record.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-muted"
+                        className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-muted touch-manipulation active:scale-90 cursor-pointer"
                         title="Delete service record"
+                        aria-label="Delete service record"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

@@ -27,7 +27,7 @@ export function Tabs({ tabs, activeTab, onChange, className, variant = 'segmente
                 type="button"
                 onClick={() => onChange(tab.id)}
                 className={cn(
-                  'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring flex-1 select-none',
+                  'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1.5 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring flex-1 select-none touch-manipulation active:scale-[0.98] cursor-pointer min-h-[36px] sm:min-h-[32px]',
                   isActive
                     ? 'bg-background text-foreground shadow-sm font-semibold'
                     : 'text-muted-foreground hover:text-foreground hover:bg-background/50'

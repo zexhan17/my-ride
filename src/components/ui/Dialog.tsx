@@ -69,7 +69,8 @@ export function Dialog({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground"
+            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground touch-manipulation active:scale-90"
+            aria-label="Close dialog"
           >
             <X className="h-4 w-4" />
           </Button>
