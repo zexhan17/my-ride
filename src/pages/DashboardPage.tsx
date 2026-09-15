@@ -242,7 +242,7 @@ export function DashboardPage({
           )}
 
           {filteredActivities.length > 10 && (
-            <div className="pt-3 border-t border-border text-center">
+            <div className="pt-3 text-center">
               <Button
                 variant="ghost"
                 size="sm"

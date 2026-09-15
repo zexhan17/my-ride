@@ -51,7 +51,7 @@ export function TimelineItem({ item }: TimelineItemProps) {
       <div className="absolute left-2.5 sm:left-3 top-3 bottom-0 w-px bg-border group-last:hidden" />
 
       {/* Timeline node */}
-      <div className="absolute left-0 sm:left-0.5 top-1.5 w-5 h-5 rounded-full border border-border bg-muted flex items-center justify-center text-muted-foreground shadow-xs">
+      <div className="absolute left-0 sm:left-0.5 top-1.5 w-5 h-5 flex items-center justify-center text-muted-foreground shadow-xs">
         {getIcon()}
       </div>
 
