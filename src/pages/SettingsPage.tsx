@@ -167,8 +167,8 @@ export function SettingsPage() {
                   type="button"
                   onClick={() => setTheme(t.id as any)}
                   className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-colors select-none ${isSelected
-                      ? 'border-foreground bg-muted text-foreground font-semibold'
-                      : 'border-border bg-card hover:bg-muted/60 text-muted-foreground hover:text-foreground'
+                    ? 'border-foreground bg-muted text-foreground font-semibold'
+                    : 'border-border bg-card hover:bg-muted/60 text-muted-foreground hover:text-foreground'
                     }`}
                 >
                   <Icon className="w-4 h-4 mb-1.5" />

@@ -106,8 +106,8 @@ export function VehicleManagerModal({
               <div
                 key={v.id}
                 className={`p-4 rounded-xl border transition-all ${isActive
-                    ? 'border-primary/50 bg-primary/5 shadow-xs'
-                    : 'border-border bg-card hover:bg-muted/30'
+                  ? 'border-primary/50 bg-primary/5 shadow-xs'
+                  : 'border-border bg-card hover:bg-muted/30'
                   }`}
               >
                 <div className="flex items-start justify-between gap-3">
