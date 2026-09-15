@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, DEFAULT_SETTINGS, seedSampleData, exportAllDataAsJSON, importAllDataFromJSON } from '../db/db';
+import { db, DEFAULT_SETTINGS, seedSampleData, removeSampleData as removeSampleDataDB, DEMO_VEHICLE_IDS, exportAllDataAsJSON, importAllDataFromJSON } from '../db/db';
 import type {
   Vehicle,
   FuelRecord,
@@ -74,7 +74,9 @@ interface VehicleContextType {
   deleteReminder: (id: string) => Promise<void>;
 
   // Data helpers
+  hasDemoData: boolean;
   loadSampleData: () => Promise<void>;
+  removeSampleData: () => Promise<{ success: boolean; count: number }>;
   exportData: () => Promise<string>;
   importData: (json: string) => Promise<{ success: boolean; message: string }>;
   clearDatabase: () => Promise<void>;
@@ -487,10 +489,36 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
     });
   }, [settingsArray]);
 
+  // Demo Data State
+  const hasDemoData = useMemo(() => {
+    return allVehicles.some(v => (DEMO_VEHICLE_IDS as readonly string[]).includes(v.id));
+  }, [allVehicles]);
+
   // Database helpers
   const loadSampleData = useCallback(async () => {
     await seedSampleData();
   }, []);
+
+  const removeSampleData = useCallback(async () => {
+    const res = await removeSampleDataDB();
+    const remaining = await db.vehicles.toArray();
+    if (remaining.length > 0) {
+      if (!remaining.some(v => v.id === activeVehicleId)) {
+        setActiveVehicleIdState(remaining[0].id);
+        await db.settings.put({
+          ...settings,
+          activeVehicleId: remaining[0].id,
+        });
+      }
+    } else {
+      setActiveVehicleIdState(null);
+      await db.settings.put({
+        ...settings,
+        activeVehicleId: undefined,
+      });
+    }
+    return res;
+  }, [activeVehicleId, settings]);
 
   const exportData = useCallback(async () => {
     return await exportAllDataAsJSON();
@@ -550,7 +578,9 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
         toggleReminderComplete,
         deleteReminder,
 
+        hasDemoData,
         loadSampleData,
+        removeSampleData,
         exportData,
         importData,
         clearDatabase,

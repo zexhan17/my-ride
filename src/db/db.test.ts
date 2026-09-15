@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   db,
   seedSampleData,
+  removeSampleData,
   exportAllDataAsJSON,
   importAllDataFromJSON,
 } from './db';
@@ -34,6 +35,58 @@ describe('Dexie Database & Storage Layer', () => {
     const hunter = vehicles.find(v => v.name.includes('Hunter'));
     expect(hunter).toBeDefined();
     expect(hunter?.make).toBe('Royal Enfield');
+  });
+
+  it('should remove demo data while preserving user vehicles and records', async () => {
+    // 1. Seed demo data
+    await seedSampleData();
+    expect(await db.vehicles.count()).toBe(2);
+
+    // 2. Add a custom user vehicle
+    const userVehicleId = 'veh_custom_duke';
+    await db.vehicles.add({
+      id: userVehicleId,
+      name: 'My KTM Duke 390',
+      type: 'bike',
+      make: 'KTM',
+      model: 'Duke 390',
+      year: 2024,
+      registrationNumber: 'DL 01 AB 1234',
+      colorHex: '#f97316',
+      fuelType: 'petrol',
+      tankCapacityLiters: 13.5,
+      initialOdometer: 100,
+      currentOdometer: 1500,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    await db.fuelRecords.add({
+      id: 'fuel_custom_1',
+      vehicleId: userVehicleId,
+      dateTime: '2026-09-01T10:00:00',
+      odometer: 500,
+      amountSpent: 1000,
+      fuelVolumeLiters: 10,
+      isFullTank: true,
+      createdAt: new Date().toISOString(),
+    });
+
+    expect(await db.vehicles.count()).toBe(3);
+
+    // 3. Remove sample data
+    const result = await removeSampleData();
+    expect(result.success).toBe(true);
+    expect(result.count).toBe(2);
+
+    // 4. Verify only custom user vehicle remains
+    const remainingVehicles = await db.vehicles.toArray();
+    expect(remainingVehicles.length).toBe(1);
+    expect(remainingVehicles[0].id).toBe(userVehicleId);
+
+    const remainingFuel = await db.fuelRecords.toArray();
+    expect(remainingFuel.length).toBe(1);
+    expect(remainingFuel[0].vehicleId).toBe(userVehicleId);
   });
 
   it('should export database to valid JSON', async () => {

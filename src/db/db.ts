@@ -39,6 +39,9 @@ export const DEFAULT_SETTINGS: UserSettings = {
   theme: 'dark',
 };
 
+// Demo Vehicle IDs
+export const DEMO_VEHICLE_IDS = ['v_hunter_350', 'v_aerox_155'] as const;
+
 // Seed realistic sample data for instant demonstration
 export async function seedSampleData(): Promise<void> {
   const v1Id = 'v_hunter_350';
@@ -315,11 +318,14 @@ export async function seedSampleData(): Promise<void> {
   ];
 
   await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders, db.settings], async () => {
-    await db.vehicles.clear();
-    await db.fuelRecords.clear();
-    await db.serviceRecords.clear();
-    await db.expenseRecords.clear();
-    await db.reminders.clear();
+    // Clear any previous demo entries first
+    for (const vId of DEMO_VEHICLE_IDS) {
+      await db.vehicles.delete(vId);
+      await db.fuelRecords.where('vehicleId').equals(vId).delete();
+      await db.serviceRecords.where('vehicleId').equals(vId).delete();
+      await db.expenseRecords.where('vehicleId').equals(vId).delete();
+      await db.reminders.where('vehicleId').equals(vId).delete();
+    }
 
     await db.vehicles.bulkAdd(sampleVehicles);
     await db.fuelRecords.bulkAdd(sampleFuelRecords);
@@ -327,11 +333,31 @@ export async function seedSampleData(): Promise<void> {
     await db.expenseRecords.bulkAdd(sampleExpenseRecords);
     await db.reminders.bulkAdd(sampleReminders);
 
+    const existingSettings = await db.settings.get(DEFAULT_SETTINGS.id);
     await db.settings.put({
-      ...DEFAULT_SETTINGS,
+      ...(existingSettings || DEFAULT_SETTINGS),
       activeVehicleId: v1Id,
     });
   });
+}
+
+// Remove all demo vehicles and associated logs
+export async function removeSampleData(): Promise<{ success: boolean; count: number }> {
+  let removedCount = 0;
+  await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders, db.settings], async () => {
+    for (const vId of DEMO_VEHICLE_IDS) {
+      const exists = await db.vehicles.get(vId);
+      if (exists) {
+        removedCount++;
+        await db.vehicles.delete(vId);
+        await db.fuelRecords.where('vehicleId').equals(vId).delete();
+        await db.serviceRecords.where('vehicleId').equals(vId).delete();
+        await db.expenseRecords.where('vehicleId').equals(vId).delete();
+        await db.reminders.where('vehicleId').equals(vId).delete();
+      }
+    }
+  });
+  return { success: true, count: removedCount };
 }
 
 // Backup & Restore

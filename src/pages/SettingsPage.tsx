@@ -20,7 +20,7 @@ import {
 import confetti from 'canvas-confetti';
 
 export function SettingsPage() {
-  const { settings, updateSettings, loadSampleData, exportData, importData, clearDatabase } = useVehicle();
+  const { settings, updateSettings, loadSampleData, removeSampleData, hasDemoData, exportData, importData, clearDatabase } = useVehicle();
   const { theme, setTheme } = useTheme();
   const { success, error, info } = useToast();
 
@@ -63,6 +63,21 @@ export function SettingsPage() {
       await loadSampleData();
       confetti({ particleCount: 60, spread: 50, origin: { y: 0.6 } });
       success('Sample demo fleet loaded successfully!');
+    }
+  };
+
+  const handleRemoveDemoData = async () => {
+    if (
+      window.confirm(
+        'Remove demo vehicles and all associated demo logs? (Your custom vehicles and records will not be affected.)'
+      )
+    ) {
+      const res = await removeSampleData();
+      if (res.count > 0) {
+        success('Sample demo fleet removed successfully!');
+      } else {
+        info('No demo vehicles were found in your garage.');
+      }
     }
   };
 
@@ -285,15 +300,29 @@ export function SettingsPage() {
           </div>
 
           <div className="pt-2 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleLoadDemoData}
-              className="text-xs gap-1.5 h-8"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Load Demo Vehicles & Logs</span>
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleLoadDemoData}
+                className="text-xs gap-1.5 h-8"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Load Demo Fleet</span>
+              </Button>
+
+              {hasDemoData && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveDemoData}
+                  className="text-xs text-destructive hover:bg-destructive/10 border-destructive/30 gap-1.5 h-8"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Remove Demo Fleet</span>
+                </Button>
+              )}
+            </div>
 
             <Button
               variant="ghost"

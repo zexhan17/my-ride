@@ -30,15 +30,10 @@ export function VehicleManagerModal({
   onAddNew,
   onEditVehicle,
 }: VehicleManagerModalProps) {
-  const { vehicles, activeVehicleId, setActiveVehicleId, deleteVehicle, settings } = useVehicle();
-  const { success, error } = useToast();
+  const { vehicles, activeVehicleId, setActiveVehicleId, deleteVehicle, hasDemoData, removeSampleData, settings } = useVehicle();
+  const { success, error, info } = useToast();
 
   const handleDelete = async (vehicle: Vehicle) => {
-    if (vehicles.length <= 1) {
-      error('You must keep at least one vehicle in your garage.');
-      return;
-    }
-
     if (
       window.confirm(
         `Are you sure you want to delete ${vehicle.name}? This will permanently delete all its fuel records, service history, and expenses.`
@@ -46,6 +41,21 @@ export function VehicleManagerModal({
     ) {
       await deleteVehicle(vehicle.id);
       success(`Vehicle "${vehicle.name}" deleted.`);
+    }
+  };
+
+  const handleRemoveDemo = async () => {
+    if (
+      window.confirm(
+        'Remove demo vehicles and all associated demo logs? (Your custom vehicles will not be affected.)'
+      )
+    ) {
+      const res = await removeSampleData();
+      if (res.count > 0) {
+        success('Sample demo fleet removed successfully!');
+      } else {
+        info('No demo vehicles found.');
+      }
     }
   };
 
@@ -188,6 +198,21 @@ export function VehicleManagerModal({
             );
           })}
         </div>
+
+        {hasDemoData && (
+          <div className="pt-2 border-t border-border flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Demo fleet active</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRemoveDemo}
+              className="text-xs text-destructive hover:bg-destructive/10 border-destructive/30 gap-1.5 h-8"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Remove Demo Fleet</span>
+            </Button>
+          </div>
+        )}
       </div>
     </Dialog>
   );
