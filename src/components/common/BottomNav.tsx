@@ -13,6 +13,16 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
+  const getActiveTab = (page: string) => {
+    if (page === 'fuel' || page === 'add-fuel') return 'fuel';
+    if (page === 'service' || page === 'add-service' || page === 'dossier') return 'service';
+    if (page === 'expenses' || page === 'add-expense') return 'expenses';
+    if (page === 'analytics') return 'analytics';
+    return 'dashboard';
+  };
+
+  const activeTabId = getActiveTab(currentPage);
+
   const navItems = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
     { id: 'fuel', label: 'Fuel', icon: Fuel },
@@ -26,7 +36,7 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
       <div className="grid grid-cols-5 h-13 items-center px-1">
         {navItems.map(item => {
           const Icon = item.icon;
-          const isActive = currentPage === item.id;
+          const isActive = activeTabId === item.id;
           return (
             <button
               key={item.id}

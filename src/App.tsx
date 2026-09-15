@@ -11,40 +11,71 @@ import { ServicePage } from './pages/ServicePage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { FuelLogModal } from './components/modals/FuelLogModal';
-import { ServiceLogModal } from './components/modals/ServiceLogModal';
-import { ExpenseLogModal } from './components/modals/ExpenseLogModal';
-import { ReminderModal } from './components/modals/ReminderModal';
-import { VehicleModal } from './components/modals/VehicleModal';
-import { VehicleManagerModal } from './components/modals/VehicleManagerModal';
-import { ServiceDossierModal } from './components/modals/ServiceDossierModal';
-import { DocumentVaultModal } from './components/modals/DocumentVaultModal';
+import { AddFuelPage } from './pages/AddFuelPage';
+import { AddServicePage } from './pages/AddServicePage';
+import { AddExpensePage } from './pages/AddExpensePage';
+import { AddReminderPage } from './pages/AddReminderPage';
+import { VehicleFormPage } from './pages/VehicleFormPage';
+import { GarageManagerPage } from './pages/GarageManagerPage';
+import { ServiceDossierPage } from './pages/ServiceDossierPage';
+import { DocumentVaultPage } from './pages/DocumentVaultPage';
 import type { Vehicle } from './types';
 
 function AppContent() {
   const { activeVehicle, isLoading } = useVehicle();
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
-
-  // Modal States
-  const [isAddFuelOpen, setIsAddFuelOpen] = useState(false);
-  const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
-  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
-  const [isAddReminderOpen, setIsAddReminderOpen] = useState(false);
-  const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
-  const [isManageVehiclesOpen, setIsManageVehiclesOpen] = useState(false);
-  const [isDossierOpen, setIsDossierOpen] = useState(false);
-  const [isVaultOpen, setIsVaultOpen] = useState(false);
+  const [previousPage, setPreviousPage] = useState<string>('dashboard');
   const [vehicleToEdit, setVehicleToEdit] = useState<Vehicle | null>(null);
+
+  const navigateTo = (page: string) => {
+    setPreviousPage(currentPage);
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goBack = () => {
+    if (currentPage === 'add-vehicle' || currentPage === 'edit-vehicle') {
+      if (previousPage === 'garage') {
+        setCurrentPage('garage');
+        return;
+      }
+    }
+    if (currentPage === 'add-fuel' && previousPage === 'fuel') {
+      setCurrentPage('fuel');
+      return;
+    }
+    if ((currentPage === 'add-service' || currentPage === 'dossier') && previousPage === 'service') {
+      setCurrentPage('service');
+      return;
+    }
+    if (currentPage === 'add-expense' && previousPage === 'expenses') {
+      setCurrentPage('expenses');
+      return;
+    }
+    setCurrentPage(previousPage || 'dashboard');
+  };
+
+  const handleOpenAddVehicle = () => {
+    setVehicleToEdit(null);
+    navigateTo('add-vehicle');
+  };
 
   const handleOpenEditVehicle = (veh: Vehicle) => {
     setVehicleToEdit(veh);
-    setIsAddVehicleOpen(true);
+    navigateTo('edit-vehicle');
   };
 
-  const handleCloseVehicleModal = () => {
-    setIsAddVehicleOpen(false);
-    setVehicleToEdit(null);
-  };
+  const isSubPage = [
+    'add-fuel',
+    'add-service',
+    'add-expense',
+    'add-reminder',
+    'add-vehicle',
+    'edit-vehicle',
+    'garage',
+    'dossier',
+    'vault',
+  ].includes(currentPage);
 
   if (isLoading) {
     return (
@@ -62,111 +93,96 @@ function AppContent() {
       {/* Top Header */}
       <Header
         currentPage={currentPage}
-        onNavigate={setCurrentPage}
-        onOpenAddVehicle={() => {
-          setVehicleToEdit(null);
-          setIsAddVehicleOpen(true);
-        }}
-        onOpenManageVehicles={() => setIsManageVehiclesOpen(true)}
+        onNavigate={navigateTo}
+        onOpenAddVehicle={handleOpenAddVehicle}
+        onOpenManageVehicles={() => navigateTo('garage')}
       />
 
-      {/* Main Container View */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-5 sm:pt-6">
+      {/* Main View Container */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
+        {/* Main Tabs */}
         {currentPage === 'dashboard' && (
           <DashboardPage
-            onOpenAddFuel={() => setIsAddFuelOpen(true)}
-            onOpenAddService={() => setIsAddServiceOpen(true)}
-            onOpenAddExpense={() => setIsAddExpenseOpen(true)}
-            onOpenAddReminder={() => setIsAddReminderOpen(true)}
-            onOpenAddVehicle={() => {
-              setVehicleToEdit(null);
-              setIsAddVehicleOpen(true);
-            }}
-            onOpenDossier={() => setIsDossierOpen(true)}
-            onOpenVault={() => setIsVaultOpen(true)}
+            onOpenAddFuel={() => navigateTo('add-fuel')}
+            onOpenAddService={() => navigateTo('add-service')}
+            onOpenAddExpense={() => navigateTo('add-expense')}
+            onOpenAddReminder={() => navigateTo('add-reminder')}
+            onOpenAddVehicle={handleOpenAddVehicle}
+            onOpenDossier={() => navigateTo('dossier')}
+            onOpenVault={() => navigateTo('vault')}
             onEditVehicle={handleOpenEditVehicle}
-            onNavigate={setCurrentPage}
+            onNavigate={navigateTo}
           />
         )}
 
         {currentPage === 'fuel' && (
-          <FuelPage onOpenAddFuel={() => setIsAddFuelOpen(true)} />
+          <FuelPage onOpenAddFuel={() => navigateTo('add-fuel')} />
         )}
 
         {currentPage === 'service' && (
           <ServicePage
-            onOpenAddService={() => setIsAddServiceOpen(true)}
-            onOpenDossier={() => setIsDossierOpen(true)}
+            onOpenAddService={() => navigateTo('add-service')}
+            onOpenDossier={() => navigateTo('dossier')}
           />
         )}
 
         {currentPage === 'expenses' && (
-          <ExpensesPage onOpenAddExpense={() => setIsAddExpenseOpen(true)} />
+          <ExpensesPage onOpenAddExpense={() => navigateTo('add-expense')} />
         )}
 
         {currentPage === 'analytics' && <AnalyticsPage />}
 
         {currentPage === 'settings' && <SettingsPage />}
+
+        {/* Dedicated Sub-Pages */}
+        {currentPage === 'add-fuel' && (
+          <AddFuelPage onBack={goBack} />
+        )}
+
+        {currentPage === 'add-service' && (
+          <AddServicePage onBack={goBack} />
+        )}
+
+        {currentPage === 'add-expense' && (
+          <AddExpensePage onBack={goBack} />
+        )}
+
+        {currentPage === 'add-reminder' && (
+          <AddReminderPage onBack={goBack} />
+        )}
+
+        {(currentPage === 'add-vehicle' || currentPage === 'edit-vehicle') && (
+          <VehicleFormPage vehicleToEdit={vehicleToEdit} onBack={goBack} />
+        )}
+
+        {currentPage === 'garage' && (
+          <GarageManagerPage
+            onBack={goBack}
+            onAddNew={handleOpenAddVehicle}
+            onEditVehicle={handleOpenEditVehicle}
+          />
+        )}
+
+        {currentPage === 'dossier' && (
+          <ServiceDossierPage onBack={goBack} />
+        )}
+
+        {currentPage === 'vault' && (
+          <DocumentVaultPage onBack={goBack} />
+        )}
       </main>
 
-      {/* Floating Action Button (Quick entry shortcuts) */}
-      {activeVehicle && (
+      {/* Quick Action Floating Action Button (Only on main dashboard/tabs) */}
+      {activeVehicle && !isSubPage && (
         <QuickActionFAB
-          onAddFuel={() => setIsAddFuelOpen(true)}
-          onAddService={() => setIsAddServiceOpen(true)}
-          onAddExpense={() => setIsAddExpenseOpen(true)}
+          onAddFuel={() => navigateTo('add-fuel')}
+          onAddService={() => navigateTo('add-service')}
+          onAddExpense={() => navigateTo('add-expense')}
         />
       )}
 
       {/* Mobile Bottom Navigation */}
-      <BottomNav currentPage={currentPage} onNavigate={setCurrentPage} />
-
-      {/* Modals */}
-      <FuelLogModal
-        isOpen={isAddFuelOpen}
-        onClose={() => setIsAddFuelOpen(false)}
-      />
-
-      <ServiceLogModal
-        isOpen={isAddServiceOpen}
-        onClose={() => setIsAddServiceOpen(false)}
-      />
-
-      <ExpenseLogModal
-        isOpen={isAddExpenseOpen}
-        onClose={() => setIsAddExpenseOpen(false)}
-      />
-
-      <ReminderModal
-        isOpen={isAddReminderOpen}
-        onClose={() => setIsAddReminderOpen(false)}
-      />
-
-      <VehicleModal
-        isOpen={isAddVehicleOpen}
-        onClose={handleCloseVehicleModal}
-        vehicleToEdit={vehicleToEdit}
-      />
-
-      <VehicleManagerModal
-        isOpen={isManageVehiclesOpen}
-        onClose={() => setIsManageVehiclesOpen(false)}
-        onAddNew={() => {
-          setVehicleToEdit(null);
-          setIsAddVehicleOpen(true);
-        }}
-        onEditVehicle={handleOpenEditVehicle}
-      />
-
-      <ServiceDossierModal
-        isOpen={isDossierOpen}
-        onClose={() => setIsDossierOpen(false)}
-      />
-
-      <DocumentVaultModal
-        isOpen={isVaultOpen}
-        onClose={() => setIsVaultOpen(false)}
-      />
+      <BottomNav currentPage={currentPage} onNavigate={navigateTo} />
     </div>
   );
 }
@@ -182,4 +198,3 @@ export default function App() {
     </ThemeProvider>
   );
 }
-

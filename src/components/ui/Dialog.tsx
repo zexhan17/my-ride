@@ -76,7 +76,7 @@ export function Dialog({
         </div>
 
         {/* Scrollable Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto max-h-[calc(88vh-110px)] space-y-4 pb-safe">
+        <div className="p-4 sm:p-5 overflow-y-auto max-h-[calc(88vh-110px)] space-y-4 pb-12 sm:pb-6 pb-safe">
           {children}
         </div>
       </div>
