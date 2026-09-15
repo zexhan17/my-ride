@@ -11,6 +11,10 @@ import {
   getDaysRemaining,
   generateId,
   cn,
+  calculateComponentWear,
+  calculateDailyUsageRate,
+  predictDateForOdometer,
+  generateCSV,
 } from './utils';
 
 describe('Utility Functions', () => {
@@ -135,6 +139,100 @@ describe('Utility Functions', () => {
       expect(id1).toBeDefined();
       expect(typeof id1).toBe('string');
       expect(id1).not.toBe(id2);
+    });
+  });
+
+  describe('calculateComponentWear', () => {
+    it('should calculate 100% remaining for brand new component', () => {
+      const wear = calculateComponentWear(10000, 5000, 10000);
+      expect(wear.kmDrivenSince).toBe(0);
+      expect(wear.kmRemaining).toBe(5000);
+      expect(wear.percentageRemaining).toBe(100);
+      expect(wear.isDue).toBe(false);
+      expect(wear.isWarning).toBe(false);
+    });
+
+    it('should calculate 50% remaining correctly', () => {
+      const wear = calculateComponentWear(10000, 5000, 12500);
+      expect(wear.kmDrivenSince).toBe(2500);
+      expect(wear.kmRemaining).toBe(2500);
+      expect(wear.percentageRemaining).toBe(50);
+      expect(wear.isDue).toBe(false);
+      expect(wear.isWarning).toBe(false);
+    });
+
+    it('should flag warning when remaining is <= 20%', () => {
+      const wear = calculateComponentWear(10000, 10000, 18500);
+      expect(wear.percentageRemaining).toBe(15);
+      expect(wear.isDue).toBe(false);
+      expect(wear.isWarning).toBe(true);
+    });
+
+    it('should flag due when wear reaches or exceeds 100%', () => {
+      const wear = calculateComponentWear(10000, 5000, 16000);
+      expect(wear.kmDrivenSince).toBe(6000);
+      expect(wear.kmRemaining).toBe(0);
+      expect(wear.percentageRemaining).toBe(0);
+      expect(wear.isDue).toBe(true);
+    });
+  });
+
+  describe('calculateDailyUsageRate', () => {
+    it('should return 0 when fewer than 2 data points exist without purchase date', () => {
+      expect(calculateDailyUsageRate([])).toEqual({ dailyRate: 0, daysCount: 0 });
+      expect(calculateDailyUsageRate([{ dateTime: '2026-09-01', odometer: 1000 }])).toEqual({ dailyRate: 0, daysCount: 0 });
+    });
+
+    it('should compute km/day over multiple records correctly', () => {
+      const records = [
+        { dateTime: '2026-09-01T08:00:00', odometer: 1000 },
+        { dateTime: '2026-09-11T08:00:00', odometer: 1500 }, // 500 km in 10 days = 50 km/day
+      ];
+      const res = calculateDailyUsageRate(records);
+      expect(res.dailyRate).toBe(50);
+      expect(res.daysCount).toBe(10);
+    });
+
+    it('should calculate rate from purchase date if only one record exists', () => {
+      const records = [
+        { dateTime: '2026-09-11T08:00:00', odometer: 1500 },
+      ];
+      const res = calculateDailyUsageRate(records, 1000, '2026-09-01T08:00:00');
+      expect(res.dailyRate).toBe(50);
+      expect(res.daysCount).toBe(10);
+    });
+  });
+
+  describe('predictDateForOdometer', () => {
+    it('should predict future calendar milestone based on daily pace', () => {
+      const targetOdo = 6000;
+      const currentOdo = 5000; // 1000 km delta
+      const dailyRate = 50; // 1000 / 50 = 20 days
+      const result = predictDateForOdometer(targetOdo, currentOdo, dailyRate);
+      expect(result).not.toBeNull();
+      expect(result?.daysRemaining).toBe(20);
+
+      const expectedDate = new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      expect(result?.estimatedDate).toBe(expectedDate);
+    });
+
+    it('should return null if daily rate is 0 or target is behind current', () => {
+      expect(predictDateForOdometer(6000, 5000, 0)).toBeNull();
+      expect(predictDateForOdometer(4000, 5000, 50)).toBeNull();
+    });
+  });
+
+  describe('generateCSV', () => {
+    it('should generate valid CSV text with headers and quoted fields where needed', () => {
+      const headers = ['Date', 'Item', 'Cost', 'Notes'];
+      const rows = [
+        ['2026-09-01', 'Oil, Filter', '500', 'Clean & tight'],
+        ['2026-09-05', 'Fuel "XP95"', '350', 'Regular'],
+      ];
+      const csv = generateCSV(headers, rows);
+      expect(csv).toContain('Date,Item,Cost,Notes');
+      expect(csv).toContain('"Oil, Filter"');
+      expect(csv).toContain('"Fuel ""XP95"""');
     });
   });
 });

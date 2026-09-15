@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useVehicle } from '../context/VehicleContext';
+import { ComponentWearCard } from '../components/common/ComponentWearCard';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -15,16 +16,19 @@ import {
   ChevronUp,
   PackageCheck,
   Search,
+  FileText,
+  Download,
 } from 'lucide-react';
 import { formatAmount, formatDistance, formatDateTime } from '../lib/utils';
 import type { ServiceRecord, ServicePartItem } from '../types';
 
 interface ServicePageProps {
   onOpenAddService: () => void;
+  onOpenDossier?: () => void;
 }
 
-export function ServicePage({ onOpenAddService }: ServicePageProps) {
-  const { serviceRecords, activeVehicle, settings, metrics, deleteServiceRecord } = useVehicle();
+export function ServicePage({ onOpenAddService, onOpenDossier }: ServicePageProps) {
+  const { serviceRecords, activeVehicle, settings, metrics, deleteServiceRecord, exportServiceCSV } = useVehicle();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedRecordId, setExpandedRecordId] = useState<string | null>(null);
 
@@ -68,10 +72,37 @@ export function ServicePage({ onOpenAddService }: ServicePageProps) {
           </p>
         </div>
 
-        <Button variant="default" onClick={onOpenAddService} className="gap-2 shrink-0 h-9">
-          <Plus className="w-3.5 h-3.5" />
-          <span>New Service Record</span>
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {onOpenDossier && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onOpenDossier}
+              className="gap-1.5 text-xs h-9"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Digital Dossier (PDF)</span>
+            </Button>
+          )}
+
+          {serviceRecords.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportServiceCSV}
+              className="gap-1.5 text-xs h-9"
+              title="Download service history spreadsheet"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </Button>
+          )}
+
+          <Button variant="default" onClick={onOpenAddService} className="gap-2 shrink-0 h-9">
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Service Record</span>
+          </Button>
+        </div>
       </div>
 
       {/* Metrics Strip */}
@@ -112,6 +143,9 @@ export function ServicePage({ onOpenAddService }: ServicePageProps) {
           <p className="text-[11px] text-muted-foreground mt-0.5">Maintenance rate</p>
         </div>
       </div>
+
+      {/* Wear & Tear Component Life Tracker */}
+      <ComponentWearCard />
 
       {/* Search Bar */}
       <div className="flex items-center gap-3">

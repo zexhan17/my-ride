@@ -16,11 +16,27 @@ import {
   CheckCircle2,
   Smartphone,
   Sparkles,
+  Share2,
+  FileSpreadsheet,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export function SettingsPage() {
-  const { settings, updateSettings, loadSampleData, removeSampleData, hasDemoData, exportData, importData, clearDatabase } = useVehicle();
+  const {
+    settings,
+    updateSettings,
+    loadSampleData,
+    removeSampleData,
+    hasDemoData,
+    exportData,
+    importData,
+    clearDatabase,
+    shareBackupData,
+    exportFuelCSV,
+    exportServiceCSV,
+    exportExpensesCSV,
+    activeVehicle,
+  } = useVehicle();
   const { theme, setTheme } = useTheme();
   const { success, error, info } = useToast();
 
@@ -99,6 +115,19 @@ export function SettingsPage() {
     }
   };
 
+  const handleShareBackup = async () => {
+    try {
+      const shared = await shareBackupData();
+      if (shared) {
+        success('Backup shared successfully!');
+      } else {
+        info('Backup downloaded directly.');
+      }
+    } catch (err: any) {
+      error('Failed to share backup', err.message);
+    }
+  };
+
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };
@@ -142,7 +171,7 @@ export function SettingsPage() {
           <span>Settings</span>
         </h1>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Theme, measurement units, backup/restore, and PWA installation
+          Theme, measurement units, backup/restore, CSV export, and PWA installation
         </p>
       </div>
 
@@ -262,10 +291,10 @@ export function SettingsPage() {
         <CardHeader className="p-4 sm:p-5 pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Database className="w-4 h-4 text-muted-foreground" />
-            <span>Data Backup & Restore</span>
+            <span>Data Backup, Share & Restore</span>
           </CardTitle>
           <CardDescription className="text-xs">
-            Export JSON backup, restore existing files, or populate demo fleet
+            Export JSON backup, share fleet file via messaging apps, or restore data
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 sm:p-5 pt-2 space-y-3">
@@ -277,15 +306,25 @@ export function SettingsPage() {
             className="hidden"
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {/* Export JSON */}
             <Button
               variant="outline"
               onClick={handleExport}
               className="justify-start gap-2 h-10 text-xs"
             >
-              <Download className="w-4 h-4" />
-              <span>Export Backup (.JSON)</span>
+              <Download className="w-4 h-4 text-muted-foreground" />
+              <span>Export (.JSON)</span>
+            </Button>
+
+            {/* Share via Web Share API */}
+            <Button
+              variant="outline"
+              onClick={handleShareBackup}
+              className="justify-start gap-2 h-10 text-xs"
+            >
+              <Share2 className="w-4 h-4 text-muted-foreground" />
+              <span>Share Backup App</span>
             </Button>
 
             {/* Import JSON */}
@@ -294,10 +333,49 @@ export function SettingsPage() {
               onClick={handleImportClick}
               className="justify-start gap-2 h-10 text-xs"
             >
-              <Upload className="w-4 h-4" />
-              <span>Restore Backup (.JSON)</span>
+              <Upload className="w-4 h-4 text-muted-foreground" />
+              <span>Restore (.JSON)</span>
             </Button>
           </div>
+
+          {/* CSV Export Section */}
+          {activeVehicle && (
+            <div className="pt-2 border-t border-border">
+              <p className="text-[11px] font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>Export {activeVehicle.name} to CSV Spreadsheet:</span>
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={exportFuelCSV}
+                  className="h-8 text-xs justify-start gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Fuel Logs (CSV)</span>
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={exportServiceCSV}
+                  className="h-8 text-xs justify-start gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Service Book (CSV)</span>
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={exportExpensesCSV}
+                  className="h-8 text-xs justify-start gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Expenses (CSV)</span>
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="pt-2 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div className="flex items-center gap-2 flex-wrap">

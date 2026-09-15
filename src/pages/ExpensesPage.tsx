@@ -12,6 +12,7 @@ import {
   Trash2,
   Search,
   Sparkles,
+  Download,
 } from 'lucide-react';
 import { formatAmount, formatDateTime, formatDate, getDaysRemaining } from '../lib/utils';
 import type { ExpenseRecord } from '../types';
@@ -21,7 +22,7 @@ interface ExpensesPageProps {
 }
 
 export function ExpensesPage({ onOpenAddExpense }: ExpensesPageProps) {
-  const { expenseRecords, activeVehicle, settings, deleteExpenseRecord } = useVehicle();
+  const { expenseRecords, activeVehicle, settings, deleteExpenseRecord, exportExpensesCSV } = useVehicle();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -67,10 +68,25 @@ export function ExpensesPage({ onOpenAddExpense }: ExpensesPageProps) {
           </p>
         </div>
 
-        <Button variant="default" onClick={onOpenAddExpense} className="gap-2 shrink-0 h-9">
-          <Plus className="w-3.5 h-3.5" />
-          <span>Add Expense</span>
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {expenseRecords.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportExpensesCSV}
+              className="gap-1.5 text-xs h-9"
+              title="Download expense logs spreadsheet"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </Button>
+          )}
+
+          <Button variant="default" onClick={onOpenAddExpense} className="gap-2 shrink-0 h-9">
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Expense</span>
+          </Button>
+        </div>
       </div>
 
       {/* Document Validity Status Cards */}

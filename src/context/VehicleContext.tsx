@@ -1,6 +1,17 @@
 import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, DEFAULT_SETTINGS, seedSampleData, removeSampleData as removeSampleDataDB, DEMO_VEHICLE_IDS, exportAllDataAsJSON, importAllDataFromJSON } from '../db/db';
+import {
+  db,
+  DEFAULT_SETTINGS,
+  seedSampleData,
+  removeSampleData as removeSampleDataDB,
+  DEMO_VEHICLE_IDS,
+  exportAllDataAsJSON,
+  importAllDataFromJSON,
+  exportFuelRecordsToCSV,
+  exportServiceRecordsToCSV,
+  exportExpensesToCSV,
+} from '../db/db';
 import type {
   Vehicle,
   FuelRecord,
@@ -9,8 +20,19 @@ import type {
   Reminder,
   UserSettings,
   ActivityItem,
+  VehicleDocument,
+  ComponentWearItem,
+  ComponentWearStatus,
+  PredictiveInsights,
+  GarageComparisonVehicle,
 } from '../types';
-import { generateId } from '../lib/utils';
+import {
+  generateId,
+  calculateComponentWear,
+  calculateDailyUsageRate,
+  predictDateForOdometer,
+  downloadBlob,
+} from '../lib/utils';
 
 interface VehicleMetrics {
   totalDistanceDriven: number;
@@ -48,6 +70,24 @@ interface VehicleContextType {
   recentActivities: ActivityItem[];
   metrics: VehicleMetrics;
 
+  // Documents & Vault
+  documents: VehicleDocument[];
+  addDocument: (doc: Omit<VehicleDocument, 'id' | 'createdAt'>) => Promise<string>;
+  deleteDocument: (id: string) => Promise<void>;
+
+  // Component Wear & Tear Life
+  componentWear: ComponentWearStatus[];
+  addComponentWear: (item: Omit<ComponentWearItem, 'id' | 'createdAt'>) => Promise<string>;
+  updateComponentWear: (id: string, updates: Partial<ComponentWearItem>) => Promise<void>;
+  resetComponentWear: (id: string, newOdometer?: number) => Promise<void>;
+  deleteComponentWear: (id: string) => Promise<void>;
+
+  // Smart Predictive Insights
+  predictiveInsights: PredictiveInsights;
+
+  // Garage-wide comparison
+  garageComparison: GarageComparisonVehicle[];
+
   // Vehicle Actions
   addVehicle: (vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
   updateVehicle: (id: string, updates: Partial<Vehicle>) => Promise<void>;
@@ -80,6 +120,12 @@ interface VehicleContextType {
   exportData: () => Promise<string>;
   importData: (json: string) => Promise<{ success: boolean; message: string }>;
   clearDatabase: () => Promise<void>;
+
+  // CSV & Web Share
+  exportFuelCSV: () => void;
+  exportServiceCSV: () => void;
+  exportExpensesCSV: () => void;
+  shareBackupData: () => Promise<boolean>;
 }
 
 const VehicleContext = createContext<VehicleContextType | undefined>(undefined);
@@ -91,6 +137,8 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
   const allServices = useLiveQuery(() => db.serviceRecords.toArray(), []) || [];
   const allExpenses = useLiveQuery(() => db.expenseRecords.toArray(), []) || [];
   const allReminders = useLiveQuery(() => db.reminders.toArray(), []) || [];
+  const allDocuments = useLiveQuery(() => db.documents.toArray(), []) || [];
+  const allComponentWear = useLiveQuery(() => db.componentWear.toArray(), []) || [];
   const settingsArray = useLiveQuery(() => db.settings.toArray(), []) || [];
 
   const [activeVehicleId, setActiveVehicleIdState] = useState<string | null>(null);
@@ -105,7 +153,6 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function init() {
       try {
-        // Initialize settings if not already present
         const settingsCount = await db.settings.count();
         if (settingsCount === 0) {
           await db.settings.put(DEFAULT_SETTINGS);
@@ -123,7 +170,6 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (allVehicles.length > 0) {
       if (activeVehicleId && allVehicles.some(v => v.id === activeVehicleId)) {
-        // Current active vehicle still exists
         return;
       }
       if (settings.activeVehicleId && allVehicles.some(v => v.id === settings.activeVehicleId)) {
@@ -153,7 +199,6 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
   const vehicleFuelRecords = useMemo(() => {
     if (!activeVehicleId) return [];
     const list = allFuel.filter(f => f.vehicleId === activeVehicleId);
-    // Sort chronologically ascending to compute distances
     list.sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
 
     let prevOdo: number | null = null;
@@ -181,7 +226,6 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
       };
     });
 
-    // Return in reverse chronological order (newest first for UI)
     return processed.reverse();
   }, [allFuel, activeVehicleId]);
 
@@ -205,6 +249,30 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
       .filter(r => r.vehicleId === activeVehicleId)
       .sort((a, b) => (a.isCompleted === b.isCompleted ? 0 : a.isCompleted ? 1 : -1));
   }, [allReminders, activeVehicleId]);
+
+  // Documents for active vehicle
+  const vehicleDocuments = useMemo(() => {
+    if (!activeVehicleId) return [];
+    return allDocuments
+      .filter(d => d.vehicleId === activeVehicleId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [allDocuments, activeVehicleId]);
+
+  // Component Wear Status for active vehicle
+  const vehicleComponentWear: ComponentWearStatus[] = useMemo(() => {
+    if (!activeVehicle || !activeVehicleId) return [];
+    const currentOdo = activeVehicle.currentOdometer || activeVehicle.initialOdometer || 0;
+    return allComponentWear
+      .filter(c => c.vehicleId === activeVehicleId)
+      .map(c => {
+        const wear = calculateComponentWear(c.lastReplacedOdometer, c.intervalKm, currentOdo);
+        return {
+          ...c,
+          ...wear,
+        };
+      })
+      .sort((a, b) => a.percentageRemaining - b.percentageRemaining);
+  }, [allComponentWear, activeVehicle, activeVehicleId]);
 
   // Unified activity timeline items
   const recentActivities: ActivityItem[] = useMemo(() => {
@@ -294,7 +362,6 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
     const totalOtherExpenses = vehicleExpenseRecords.reduce((acc, e) => acc + (e.amount || 0), 0);
     const totalOverallSpent = totalFuelSpent + totalServiceSpent + totalOtherExpenses;
 
-    // Fuel efficiency calculation
     const efficiencyEntries = vehicleFuelRecords.filter(f => f.calculatedEfficiencyKmpl && f.calculatedEfficiencyKmpl > 0);
     const averageFuelEfficiency = efficiencyEntries.length > 0
       ? efficiencyEntries.reduce((acc, f) => acc + (f.calculatedEfficiencyKmpl || 0), 0) / efficiencyEntries.length
@@ -334,6 +401,120 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
     };
   }, [activeVehicle, vehicleFuelRecords, vehicleServiceRecords, vehicleExpenseRecords]);
 
+  // Smart Predictive Insights
+  const predictiveInsights: PredictiveInsights = useMemo(() => {
+    if (!activeVehicle || !activeVehicleId) {
+      return {
+        dailyUsageRateKm: 0,
+        weeklyUsageRateKm: 0,
+        daysLogged: 0,
+        componentPredictions: [],
+      };
+    }
+
+    const usage = calculateDailyUsageRate(
+      [...vehicleFuelRecords, ...vehicleServiceRecords],
+      activeVehicle.initialOdometer || 0,
+      activeVehicle.purchaseDate
+    );
+
+    const currentOdo = activeVehicle.currentOdometer || activeVehicle.initialOdometer || 0;
+    const dailyRate = usage.dailyRate;
+    const weeklyRate = Math.round(dailyRate * 7 * 10) / 10;
+
+    let nextServicePrediction: PredictiveInsights['nextServicePrediction'] = undefined;
+    const incompleteServiceReminder = vehicleReminders.find(
+      r => !r.isCompleted && (r.category === 'service' || r.type === 'odometer' || r.type === 'both') && r.targetOdometer && r.targetOdometer > currentOdo
+    );
+
+    let targetOdo = incompleteServiceReminder?.targetOdometer;
+    let reason = incompleteServiceReminder ? incompleteServiceReminder.title : 'Next Periodic Maintenance';
+
+    if (!targetOdo) {
+      targetOdo = (Math.floor(currentOdo / 5000) + 1) * 5000;
+    }
+
+    if (dailyRate > 0 && targetOdo > currentOdo) {
+      const pred = predictDateForOdometer(targetOdo, currentOdo, dailyRate);
+      if (pred) {
+        nextServicePrediction = {
+          targetOdometer: targetOdo,
+          estimatedDate: pred.estimatedDate,
+          daysRemaining: pred.daysRemaining,
+          reason,
+        };
+      }
+    }
+
+    const componentPredictions = vehicleComponentWear
+      .filter(c => dailyRate > 0 && c.kmRemaining > 0)
+      .map(c => {
+        const target = (c.lastReplacedOdometer || 0) + c.intervalKm;
+        const pred = predictDateForOdometer(target, currentOdo, dailyRate);
+        return {
+          componentName: c.name,
+          estimatedDueDate: pred?.estimatedDate || '',
+          daysRemaining: pred?.daysRemaining || 0,
+          remainingKm: c.kmRemaining,
+        };
+      })
+      .filter(c => c.daysRemaining > 0)
+      .sort((a, b) => a.daysRemaining - b.daysRemaining);
+
+    return {
+      dailyUsageRateKm: dailyRate,
+      weeklyUsageRateKm: weeklyRate,
+      daysLogged: usage.daysCount,
+      nextServicePrediction,
+      componentPredictions,
+    };
+  }, [activeVehicle, activeVehicleId, vehicleFuelRecords, vehicleServiceRecords, vehicleReminders, vehicleComponentWear]);
+
+  // Garage Comparison Matrix
+  const garageComparison: GarageComparisonVehicle[] = useMemo(() => {
+    return allVehicles.map(veh => {
+      const fuels = allFuel.filter(f => f.vehicleId === veh.id);
+      const services = allServices.filter(s => s.vehicleId === veh.id);
+      const expenses = allExpenses.filter(e => e.vehicleId === veh.id);
+      const docs = allDocuments.filter(d => d.vehicleId === veh.id);
+
+      const totalFuelSpent = fuels.reduce((acc, f) => acc + (f.amountSpent || 0), 0);
+      const totalFuelVol = fuels.reduce((acc, f) => acc + (f.fuelVolumeLiters || 0), 0);
+      const totalServiceSpent = services.reduce((acc, s) => acc + (s.totalCost || 0), 0);
+      const totalOtherExpenses = expenses.reduce((acc, e) => acc + (e.amount || 0), 0);
+      const totalOverallSpent = totalFuelSpent + totalServiceSpent + totalOtherExpenses;
+
+      const currentOdo = veh.currentOdometer || veh.initialOdometer || 0;
+      const totalDistanceDriven = Math.max(0, currentOdo - (veh.initialOdometer || 0));
+
+      const effEntries = fuels.filter(f => f.calculatedEfficiencyKmpl && f.calculatedEfficiencyKmpl > 0);
+      const averageFuelEfficiency = effEntries.length > 0
+        ? effEntries.reduce((acc, f) => acc + (f.calculatedEfficiencyKmpl || 0), 0) / effEntries.length
+        : totalFuelVol > 0 && totalDistanceDriven > 0
+          ? totalDistanceDriven / totalFuelVol
+          : 0;
+
+      const overallCostPerKm = totalDistanceDriven > 0 ? totalOverallSpent / totalDistanceDriven : 0;
+      const fuelCostPerKm = totalDistanceDriven > 0 ? totalFuelSpent / totalDistanceDriven : 0;
+      const serviceCostPerKm = totalDistanceDriven > 0 ? totalServiceSpent / totalDistanceDriven : 0;
+
+      return {
+        vehicle: veh,
+        totalDistanceDriven,
+        totalFuelSpent,
+        totalServiceSpent,
+        totalOtherExpenses,
+        totalOverallSpent,
+        averageFuelEfficiency,
+        overallCostPerKm,
+        fuelCostPerKm,
+        serviceCostPerKm,
+        serviceCount: services.length,
+        documentsCount: docs.length,
+      };
+    });
+  }, [allVehicles, allFuel, allServices, allExpenses, allDocuments]);
+
   // Sync latest odometer if any record has a higher odometer
   const syncOdometerIfHigher = useCallback(async (vehicleId: string, odo?: number) => {
     if (!odo) return;
@@ -368,12 +549,14 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteVehicle = useCallback(async (id: string) => {
-    await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders], async () => {
+    await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders, db.documents, db.componentWear], async () => {
       await db.vehicles.delete(id);
       await db.fuelRecords.where('vehicleId').equals(id).delete();
       await db.serviceRecords.where('vehicleId').equals(id).delete();
       await db.expenseRecords.where('vehicleId').equals(id).delete();
       await db.reminders.where('vehicleId').equals(id).delete();
+      await db.documents.where('vehicleId').equals(id).delete();
+      await db.componentWear.where('vehicleId').equals(id).delete();
     });
     const remaining = await db.vehicles.toArray();
     if (remaining.length > 0) {
@@ -480,6 +663,53 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
     await db.reminders.delete(id);
   }, []);
 
+  // Document Vault Actions
+  const addDocument = useCallback(async (docData: Omit<VehicleDocument, 'id' | 'createdAt'>) => {
+    const id = `doc_${generateId()}`;
+    const newDoc: VehicleDocument = {
+      ...docData,
+      id,
+      createdAt: new Date().toISOString(),
+    };
+    await db.documents.add(newDoc);
+    return id;
+  }, []);
+
+  const deleteDocument = useCallback(async (id: string) => {
+    await db.documents.delete(id);
+  }, []);
+
+  // Component Wear Actions
+  const addComponentWear = useCallback(async (itemData: Omit<ComponentWearItem, 'id' | 'createdAt'>) => {
+    const id = `comp_${generateId()}`;
+    const newItem: ComponentWearItem = {
+      ...itemData,
+      id,
+      createdAt: new Date().toISOString(),
+    };
+    await db.componentWear.add(newItem);
+    return id;
+  }, []);
+
+  const updateComponentWear = useCallback(async (id: string, updates: Partial<ComponentWearItem>) => {
+    await db.componentWear.update(id, updates);
+  }, []);
+
+  const resetComponentWear = useCallback(async (id: string, newOdometer?: number) => {
+    const item = await db.componentWear.get(id);
+    if (!item) return;
+    const vehicle = await db.vehicles.get(item.vehicleId);
+    const targetOdo = newOdometer !== undefined ? newOdometer : vehicle?.currentOdometer || item.lastReplacedOdometer;
+    await db.componentWear.update(id, {
+      lastReplacedOdometer: targetOdo,
+      lastReplacedDate: new Date().toISOString().split('T')[0],
+    });
+  }, []);
+
+  const deleteComponentWear = useCallback(async (id: string) => {
+    await db.componentWear.delete(id);
+  }, []);
+
   // Settings Action
   const updateSettings = useCallback(async (newSettings: Partial<UserSettings>) => {
     const current = settingsArray.length > 0 ? settingsArray[0] : DEFAULT_SETTINGS;
@@ -529,16 +759,74 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const clearDatabase = useCallback(async () => {
-    await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders, db.settings], async () => {
+    await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders, db.documents, db.componentWear, db.settings], async () => {
       await db.vehicles.clear();
       await db.fuelRecords.clear();
       await db.serviceRecords.clear();
       await db.expenseRecords.clear();
       await db.reminders.clear();
+      await db.documents.clear();
+      await db.componentWear.clear();
       await db.settings.clear();
     });
     setActiveVehicleIdState(null);
   }, []);
+
+  // CSV Exports
+  const exportFuelCSV = useCallback(() => {
+    if (!activeVehicle) return;
+    const csvContent = exportFuelRecordsToCSV(vehicleFuelRecords, settings.distanceUnit, settings.fuelVolumeUnit);
+    const filename = `${activeVehicle.name.replace(/\s+/g, '_')}_Fuel_Logs_${new Date().toISOString().split('T')[0]}.csv`;
+    downloadBlob(csvContent, filename);
+  }, [activeVehicle, vehicleFuelRecords, settings]);
+
+  const exportServiceCSV = useCallback(() => {
+    if (!activeVehicle) return;
+    const csvContent = exportServiceRecordsToCSV(vehicleServiceRecords, settings.distanceUnit);
+    const filename = `${activeVehicle.name.replace(/\s+/g, '_')}_Service_History_${new Date().toISOString().split('T')[0]}.csv`;
+    downloadBlob(csvContent, filename);
+  }, [activeVehicle, vehicleServiceRecords, settings]);
+
+  const exportExpensesCSV = useCallback(() => {
+    if (!activeVehicle) return;
+    const csvContent = exportExpensesToCSV(vehicleExpenseRecords);
+    const filename = `${activeVehicle.name.replace(/\s+/g, '_')}_Expenses_${new Date().toISOString().split('T')[0]}.csv`;
+    downloadBlob(csvContent, filename);
+  }, [activeVehicle, vehicleExpenseRecords]);
+
+  // Native Web Share API
+  const shareBackupData = useCallback(async () => {
+    try {
+      const jsonString = await exportData();
+      const dateStr = new Date().toISOString().split('T')[0];
+      const filename = `my_ride_backup_${dateStr}.json`;
+
+      if (navigator.canShare && navigator.canShare({ files: [new File([jsonString], filename, { type: 'application/json' })] })) {
+        const file = new File([jsonString], filename, { type: 'application/json' });
+        await navigator.share({
+          title: 'My Ride Fleet Backup',
+          text: `My Ride vehicle backup (${dateStr})`,
+          files: [file],
+        });
+        return true;
+      } else if (navigator.share) {
+        await navigator.share({
+          title: 'My Ride Fleet Backup',
+          text: jsonString,
+        });
+        return true;
+      } else {
+        // Fallback to standard download
+        downloadBlob(jsonString, filename, 'application/json');
+        return false;
+      }
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Share failed', err);
+      }
+      return false;
+    }
+  }, [exportData]);
 
   return (
     <VehicleContext.Provider
@@ -557,6 +845,19 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
         reminders: vehicleReminders,
         recentActivities,
         metrics,
+
+        documents: vehicleDocuments,
+        addDocument,
+        deleteDocument,
+
+        componentWear: vehicleComponentWear,
+        addComponentWear,
+        updateComponentWear,
+        resetComponentWear,
+        deleteComponentWear,
+
+        predictiveInsights,
+        garageComparison,
 
         addVehicle,
         updateVehicle,
@@ -584,6 +885,11 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
         exportData,
         importData,
         clearDatabase,
+
+        exportFuelCSV,
+        exportServiceCSV,
+        exportExpensesCSV,
+        shareBackupData,
       }}
     >
       {children}

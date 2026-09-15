@@ -88,3 +88,171 @@ export function getDaysRemaining(targetDateString?: string): { days: number; isO
 export function generateId(): string {
   return `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
+
+// Wear & Tear Calculation
+export function calculateComponentWear(
+  lastReplacedOdometer: number,
+  intervalKm: number,
+  currentOdometer: number
+): {
+  kmDrivenSince: number;
+  kmRemaining: number;
+  percentageRemaining: number;
+  isDue: boolean;
+  isWarning: boolean;
+} {
+  const safeInterval = Math.max(1, intervalKm);
+  const kmDrivenSince = Math.max(0, currentOdometer - (lastReplacedOdometer || 0));
+  const rawRemaining = safeInterval - kmDrivenSince;
+  const kmRemaining = Math.max(0, rawRemaining);
+  const percentageRemaining = Math.max(0, Math.min(100, Math.round((rawRemaining / safeInterval) * 100)));
+  const isDue = kmDrivenSince >= safeInterval;
+  const isWarning = !isDue && percentageRemaining <= 20;
+
+  return {
+    kmDrivenSince,
+    kmRemaining,
+    percentageRemaining,
+    isDue,
+    isWarning,
+  };
+}
+
+// Daily Usage Rate Calculation
+export function calculateDailyUsageRate(
+  records: { dateTime: string; odometer: number }[],
+  initialOdometer: number = 0,
+  purchaseDate?: string
+): { dailyRate: number; daysCount: number } {
+  const validRecords = records
+    .filter(r => r.dateTime && !isNaN(r.odometer) && r.odometer > 0)
+    .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+
+  if (validRecords.length >= 2) {
+    const first = validRecords[0];
+    const last = validRecords[validRecords.length - 1];
+    const startMs = new Date(first.dateTime).getTime();
+    const endMs = new Date(last.dateTime).getTime();
+    const diffDays = Math.max(1, (endMs - startMs) / (1000 * 60 * 60 * 24));
+    const distDriven = Math.max(0, last.odometer - first.odometer);
+
+    if (distDriven > 0 && diffDays >= 1) {
+      const dailyRate = distDriven / diffDays;
+      return { dailyRate: Math.round(dailyRate * 10) / 10, daysCount: Math.round(diffDays) };
+    }
+  }
+
+  // Fallback to purchase date or single record
+  if (validRecords.length === 1 && purchaseDate) {
+    const record = validRecords[0];
+    const startMs = new Date(purchaseDate).getTime();
+    const endMs = new Date(record.dateTime).getTime();
+    const diffDays = Math.max(1, (endMs - startMs) / (1000 * 60 * 60 * 24));
+    const distDriven = Math.max(0, record.odometer - initialOdometer);
+    if (distDriven > 0 && diffDays >= 1) {
+      const dailyRate = distDriven / diffDays;
+      return { dailyRate: Math.round(dailyRate * 10) / 10, daysCount: Math.round(diffDays) };
+    }
+  }
+
+  return { dailyRate: 0, daysCount: 0 };
+}
+
+// Predictive Date Estimation
+export function predictDateForOdometer(
+  targetOdometer: number,
+  currentOdometer: number,
+  dailyRate: number
+): { estimatedDate: string; daysRemaining: number } | null {
+  if (dailyRate <= 0 || targetOdometer <= currentOdometer) return null;
+
+  const distanceLeft = targetOdometer - currentOdometer;
+  const daysRemaining = Math.max(1, Math.ceil(distanceLeft / dailyRate));
+  const estimatedDateObj = new Date(Date.now() + daysRemaining * 24 * 60 * 60 * 1000);
+  const estimatedDate = estimatedDateObj.toISOString().split('T')[0];
+
+  return {
+    estimatedDate,
+    daysRemaining,
+  };
+}
+
+// CSV Export Helpers
+export function escapeCSVCell(value: any): string {
+  if (value === null || value === undefined) return '';
+  const str = String(value);
+  if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+export function generateCSV(headers: string[], rows: any[][]): string {
+  const headerLine = headers.map(escapeCSVCell).join(',');
+  const rowLines = rows.map(row => row.map(escapeCSVCell).join(','));
+  return [headerLine, ...rowLines].join('\r\n');
+}
+
+export function downloadBlob(content: string, filename: string, mimeType: string = 'text/csv;charset=utf-8;'): void {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Client-Side Image Compression for Offline Vault
+export function compressImageBase64(file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.75): Promise<string> {
+  return new Promise((resolve, reject) => {
+    // If not an image (e.g. PDF), convert directly to data URL
+    if (!file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target?.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = event => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(event.target?.result as string);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedBase64);
+      };
+      img.onerror = () => resolve(event.target?.result as string);
+      img.src = event.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}

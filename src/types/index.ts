@@ -136,3 +136,98 @@ export type ActivityItem = {
   raw: FuelRecord | ServiceRecord | ExpenseRecord;
 };
 
+// Document Vault
+export type DocumentCategory =
+  | 'rc'
+  | 'insurance'
+  | 'puc'
+  | 'invoice'
+  | 'warranty'
+  | 'license'
+  | 'photo'
+  | 'other';
+
+export interface VehicleDocument {
+  id: string;
+  vehicleId: string;
+  title: string;
+  category: DocumentCategory;
+  fileData: string; // Base64 data URL
+  fileName: string;
+  fileType: string;
+  fileSize: number; // in bytes
+  expiryDate?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+// Wear & Tear Component Life Tracker
+export type ComponentType =
+  | 'engine_oil'
+  | 'oil_filter'
+  | 'brake_pads'
+  | 'chain_sprocket'
+  | 'drive_belt'
+  | 'air_filter'
+  | 'spark_plug'
+  | 'front_tyre'
+  | 'rear_tyre'
+  | 'battery'
+  | 'coolant'
+  | 'custom';
+
+export interface ComponentWearItem {
+  id: string;
+  vehicleId: string;
+  name: string;
+  type: ComponentType;
+  lastReplacedOdometer: number;
+  intervalKm: number;
+  lastReplacedDate?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface ComponentWearStatus extends ComponentWearItem {
+  kmDrivenSince: number;
+  kmRemaining: number;
+  percentageRemaining: number; // 0 to 100
+  isDue: boolean;
+  isWarning: boolean;
+}
+
+// Smart Predictive Insights
+export interface PredictiveInsights {
+  dailyUsageRateKm: number; // average km per day
+  weeklyUsageRateKm: number;
+  daysLogged: number;
+  nextServicePrediction?: {
+    targetOdometer: number;
+    estimatedDate: string;
+    daysRemaining: number;
+    reason: string;
+  };
+  componentPredictions: {
+    componentName: string;
+    estimatedDueDate: string;
+    daysRemaining: number;
+    remainingKm: number;
+  }[];
+}
+
+// Garage Comparison
+export interface GarageComparisonVehicle {
+  vehicle: Vehicle;
+  totalDistanceDriven: number;
+  totalFuelSpent: number;
+  totalServiceSpent: number;
+  totalOtherExpenses: number;
+  totalOverallSpent: number;
+  averageFuelEfficiency: number;
+  overallCostPerKm: number;
+  fuelCostPerKm: number;
+  serviceCostPerKm: number;
+  serviceCount: number;
+  documentsCount: number;
+}
+

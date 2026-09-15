@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useVehicle } from '../context/VehicleContext';
 import { useTheme } from '../context/ThemeContext';
+import { GarageComparisonMatrix } from '../components/common/GarageComparisonMatrix';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import {
   BarChart,
@@ -165,6 +166,9 @@ export function AnalyticsPage() {
           <p className="text-[11px] text-muted-foreground mt-0.5">Logged</p>
         </div>
       </div>
+
+      {/* Multi-Vehicle Garage Comparison Matrix */}
+      <GarageComparisonMatrix />
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

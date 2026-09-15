@@ -3,6 +3,8 @@ import { useVehicle } from '../context/VehicleContext';
 import { VehicleCard } from '../components/common/VehicleCard';
 import { ReminderBanner } from '../components/common/ReminderBanner';
 import { TimelineItem } from '../components/common/TimelineItem';
+import { ComponentWearCard } from '../components/common/ComponentWearCard';
+import { PredictiveInsightsCard } from '../components/common/PredictiveInsightsCard';
 import { StatCard } from '../components/ui/StatCard';
 import { Tabs } from '../components/ui/Tabs';
 import { Button } from '../components/ui/Button';
@@ -17,6 +19,8 @@ import {
   Compass,
   ArrowRight,
   Sparkles,
+  FileText,
+  ShieldCheck,
 } from 'lucide-react';
 import { formatAmount, formatDistance, formatEfficiency, formatCostPerUnit } from '../lib/utils';
 import type { Vehicle } from '../types';
@@ -27,6 +31,8 @@ interface DashboardPageProps {
   onOpenAddExpense: () => void;
   onOpenAddReminder: () => void;
   onOpenAddVehicle: () => void;
+  onOpenDossier: () => void;
+  onOpenVault: () => void;
   onEditVehicle: (vehicle: Vehicle) => void;
   onNavigate: (page: string) => void;
 }
@@ -37,6 +43,8 @@ export function DashboardPage({
   onOpenAddExpense,
   onOpenAddReminder,
   onOpenAddVehicle,
+  onOpenDossier,
+  onOpenVault,
   onEditVehicle,
   onNavigate,
 }: DashboardPageProps) {
@@ -132,7 +140,7 @@ export function DashboardPage({
       {/* Quick Action Bar */}
       <div className="p-3.5 rounded-lg border border-border bg-card flex flex-wrap items-center justify-between gap-3">
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Quick Entry
+          Quick Entry & Vault
         </span>
         <div className="flex items-center gap-2 flex-wrap">
           <Button
@@ -164,8 +172,34 @@ export function DashboardPage({
             <Receipt className="w-3.5 h-3.5" />
             <span>Add Expense</span>
           </Button>
+
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={onOpenVault}
+            className="gap-1.5 text-xs h-8"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Document Vault</span>
+          </Button>
+
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={onOpenDossier}
+            className="gap-1.5 text-xs h-8"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Digital Dossier</span>
+          </Button>
         </div>
       </div>
+
+      {/* Smart Predictive Insights */}
+      <PredictiveInsightsCard />
+
+      {/* Wear & Tear Component Life Tracker */}
+      <ComponentWearCard />
 
       {/* Activity Stream Section */}
       <Card className="border-border">

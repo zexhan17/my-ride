@@ -6,7 +6,10 @@ import type {
   ExpenseRecord,
   Reminder,
   UserSettings,
+  VehicleDocument,
+  ComponentWearItem,
 } from '../types';
+import { generateCSV } from '../lib/utils';
 
 export class MyRideDatabase extends Dexie {
   vehicles!: Table<Vehicle, string>;
@@ -15,6 +18,8 @@ export class MyRideDatabase extends Dexie {
   expenseRecords!: Table<ExpenseRecord, string>;
   reminders!: Table<Reminder, string>;
   settings!: Table<UserSettings, string>;
+  documents!: Table<VehicleDocument, string>;
+  componentWear!: Table<ComponentWearItem, string>;
 
   constructor() {
     super('MyRideDB');
@@ -25,6 +30,8 @@ export class MyRideDatabase extends Dexie {
       expenseRecords: 'id, vehicleId, dateTime, category, amount, createdAt',
       reminders: 'id, vehicleId, isCompleted, targetDate, targetOdometer, createdAt',
       settings: 'id',
+      documents: 'id, vehicleId, category, expiryDate, createdAt',
+      componentWear: 'id, vehicleId, type, lastReplacedOdometer, intervalKm, createdAt',
     });
   }
 }
@@ -317,7 +324,115 @@ export async function seedSampleData(): Promise<void> {
     },
   ];
 
-  await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders, db.settings], async () => {
+  const sampleComponentWear: ComponentWearItem[] = [
+    {
+      id: 'c_1',
+      vehicleId: v1Id,
+      name: 'Engine Oil & Filter',
+      type: 'engine_oil',
+      lastReplacedOdometer: 5000,
+      intervalKm: 5000,
+      lastReplacedDate: '2025-02-10',
+      notes: 'Motul 7100 10W50 Synthetic',
+      createdAt: '2025-02-10T14:30:00Z',
+    },
+    {
+      id: 'c_2',
+      vehicleId: v1Id,
+      name: 'Front & Rear Brake Pads',
+      type: 'brake_pads',
+      lastReplacedOdometer: 5000,
+      intervalKm: 8000,
+      lastReplacedDate: '2025-02-10',
+      notes: 'Bybre Sintered Pads',
+      createdAt: '2025-02-10T14:30:00Z',
+    },
+    {
+      id: 'c_3',
+      vehicleId: v1Id,
+      name: 'Chain & Sprocket Set',
+      type: 'chain_sprocket',
+      lastReplacedOdometer: 0,
+      intervalKm: 20000,
+      notes: 'OEM Brass Coated Chain',
+      createdAt: '2024-03-10T10:00:00Z',
+    },
+    {
+      id: 'c_4',
+      vehicleId: v1Id,
+      name: 'Air Filter Element',
+      type: 'air_filter',
+      lastReplacedOdometer: 5000,
+      intervalKm: 10000,
+      lastReplacedDate: '2025-02-10',
+      notes: 'Clean every 2500 km, replace at 10000 km',
+      createdAt: '2025-02-10T14:30:00Z',
+    },
+    {
+      id: 'c_5',
+      vehicleId: v1Id,
+      name: 'Tyres (Front & Rear)',
+      type: 'front_tyre',
+      lastReplacedOdometer: 0,
+      intervalKm: 25000,
+      notes: 'Ceat Zoom XL Tubeless',
+      createdAt: '2024-03-10T10:00:00Z',
+    },
+    // Aerox wear
+    {
+      id: 'c_a1',
+      vehicleId: v2Id,
+      name: 'CVT Drive Belt & Rollers',
+      type: 'drive_belt',
+      lastReplacedOdometer: 0,
+      intervalKm: 18000,
+      notes: 'OEM Yamaha V-Belt',
+      createdAt: '2023-08-20T10:00:00Z',
+    },
+  ];
+
+  const sampleDocuments: VehicleDocument[] = [
+    {
+      id: 'd_1',
+      vehicleId: v1Id,
+      title: 'Registration Certificate (RC Book)',
+      category: 'rc',
+      fileName: 'Hunter350_Smart_RC.pdf',
+      fileType: 'application/pdf',
+      fileSize: 48200,
+      fileData: 'data:application/pdf;base64,JVBERi0xLjQKJcTl8uXrp/Og0MTGCjQgMCBvYmoKPDwgL0xlbmd0aCA1IDAgUiAvRmlsdGVyIC9GbGF0ZURlY29kZSA+PgpzdHJlYW0KeAErVAhUKC5JLCktSgUADgsEtQplbmRzdHJlYW0KZW5kb2Jq',
+      notes: 'Registration valid up to March 2039',
+      createdAt: '2024-03-10T10:00:00Z',
+    },
+    {
+      id: 'd_2',
+      vehicleId: v1Id,
+      title: 'Comprehensive Insurance Policy (Zero Dep)',
+      category: 'insurance',
+      expiryDate: '2027-03-05',
+      fileName: 'HDFC_ERGO_ZeroDep_Policy.pdf',
+      fileType: 'application/pdf',
+      fileSize: 76500,
+      fileData: 'data:application/pdf;base64,JVBERi0xLjQKJcTl8uXrp/Og0MTGCjQgMCBvYmoKPDwgL0xlbmd0aCA1IDAgUiAvRmlsdGVyIC9GbGF0ZURlY29kZSA+PgpzdHJlYW0KeAErVAhUKC5JLCktSgUADgsEtQplbmRzdHJlYW0KZW5kb2Jq',
+      notes: 'Policy No: HDFC-RE-9821734. Includes Roadside Assistance.',
+      createdAt: '2026-03-05T10:00:00Z',
+    },
+    {
+      id: 'd_3',
+      vehicleId: v1Id,
+      title: 'PUC Pollution Certificate',
+      category: 'puc',
+      expiryDate: '2026-11-18',
+      fileName: 'PUC_Green_Certificate.pdf',
+      fileType: 'application/pdf',
+      fileSize: 31200,
+      fileData: 'data:application/pdf;base64,JVBERi0xLjQKJcTl8uXrp/Og0MTGCjQgMCBvYmoKPDwgL0xlbmd0aCA1IDAgUiAvRmlsdGVyIC9GbGF0ZURlY29kZSA+PgpzdHJlYW0KeAErVAhUKC5JLCktSgUADgsEtQplbmRzdHJlYW0KZW5kb2Jq',
+      notes: 'Emission test passed with zero carbon excess.',
+      createdAt: '2026-05-18T16:20:00Z',
+    },
+  ];
+
+  await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders, db.documents, db.componentWear, db.settings], async () => {
     // Clear any previous demo entries first
     for (const vId of DEMO_VEHICLE_IDS) {
       await db.vehicles.delete(vId);
@@ -325,6 +440,8 @@ export async function seedSampleData(): Promise<void> {
       await db.serviceRecords.where('vehicleId').equals(vId).delete();
       await db.expenseRecords.where('vehicleId').equals(vId).delete();
       await db.reminders.where('vehicleId').equals(vId).delete();
+      await db.documents.where('vehicleId').equals(vId).delete();
+      await db.componentWear.where('vehicleId').equals(vId).delete();
     }
 
     await db.vehicles.bulkAdd(sampleVehicles);
@@ -332,6 +449,8 @@ export async function seedSampleData(): Promise<void> {
     await db.serviceRecords.bulkAdd(sampleServiceRecords);
     await db.expenseRecords.bulkAdd(sampleExpenseRecords);
     await db.reminders.bulkAdd(sampleReminders);
+    await db.documents.bulkAdd(sampleDocuments);
+    await db.componentWear.bulkAdd(sampleComponentWear);
 
     const existingSettings = await db.settings.get(DEFAULT_SETTINGS.id);
     await db.settings.put({
@@ -344,7 +463,7 @@ export async function seedSampleData(): Promise<void> {
 // Remove all demo vehicles and associated logs
 export async function removeSampleData(): Promise<{ success: boolean; count: number }> {
   let removedCount = 0;
-  await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders, db.settings], async () => {
+  await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders, db.documents, db.componentWear, db.settings], async () => {
     for (const vId of DEMO_VEHICLE_IDS) {
       const exists = await db.vehicles.get(vId);
       if (exists) {
@@ -354,6 +473,8 @@ export async function removeSampleData(): Promise<{ success: boolean; count: num
         await db.serviceRecords.where('vehicleId').equals(vId).delete();
         await db.expenseRecords.where('vehicleId').equals(vId).delete();
         await db.reminders.where('vehicleId').equals(vId).delete();
+        await db.documents.where('vehicleId').equals(vId).delete();
+        await db.componentWear.where('vehicleId').equals(vId).delete();
       }
     }
   });
@@ -367,11 +488,13 @@ export async function exportAllDataAsJSON(): Promise<string> {
   const serviceRecords = await db.serviceRecords.toArray();
   const expenseRecords = await db.expenseRecords.toArray();
   const reminders = await db.reminders.toArray();
+  const documents = await db.documents.toArray();
+  const componentWear = await db.componentWear.toArray();
   const settings = await db.settings.toArray();
 
   const backupData = {
     appName: 'MyRide',
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     data: {
       vehicles,
@@ -379,6 +502,8 @@ export async function exportAllDataAsJSON(): Promise<string> {
       serviceRecords,
       expenseRecords,
       reminders,
+      documents,
+      componentWear,
       settings,
     },
   };
@@ -393,9 +518,9 @@ export async function importAllDataFromJSON(jsonString: string): Promise<{ succe
       throw new Error('Invalid backup file format.');
     }
 
-    const { vehicles, fuelRecords, serviceRecords, expenseRecords, reminders, settings } = parsed.data;
+    const { vehicles, fuelRecords, serviceRecords, expenseRecords, reminders, documents, componentWear, settings } = parsed.data;
 
-    await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders, db.settings], async () => {
+    await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders, db.documents, db.componentWear, db.settings], async () => {
       if (Array.isArray(vehicles) && vehicles.length > 0) {
         await db.vehicles.clear();
         await db.vehicles.bulkAdd(vehicles);
@@ -416,6 +541,14 @@ export async function importAllDataFromJSON(jsonString: string): Promise<{ succe
         await db.reminders.clear();
         await db.reminders.bulkAdd(reminders);
       }
+      if (Array.isArray(documents)) {
+        await db.documents.clear();
+        await db.documents.bulkAdd(documents);
+      }
+      if (Array.isArray(componentWear)) {
+        await db.componentWear.clear();
+        await db.componentWear.bulkAdd(componentWear);
+      }
       if (Array.isArray(settings) && settings.length > 0) {
         await db.settings.clear();
         await db.settings.bulkAdd(settings);
@@ -426,5 +559,86 @@ export async function importAllDataFromJSON(jsonString: string): Promise<{ succe
   } catch (err: any) {
     return { success: false, message: err.message || 'Failed to import backup data.' };
   }
+}
+
+// CSV Export Helpers
+export function exportFuelRecordsToCSV(records: FuelRecord[], distUnit = 'km', volUnit = 'L'): string {
+  const headers = [
+    'Date & Time',
+    `Odometer (${distUnit})`,
+    `Distance Since Last (${distUnit})`,
+    'Amount Spent',
+    `Fuel Volume (${volUnit})`,
+    `Mileage (${distUnit}/${volUnit})`,
+    `Cost Per ${distUnit}`,
+    'Station Name',
+    'Full Tank',
+    'Notes',
+  ];
+
+  const rows = records.map(r => [
+    r.dateTime,
+    r.odometer,
+    r.distanceDrivenSinceLast !== undefined ? r.distanceDrivenSinceLast : '',
+    r.amountSpent,
+    r.fuelVolumeLiters !== undefined ? r.fuelVolumeLiters : '',
+    r.calculatedEfficiencyKmpl ? Number(r.calculatedEfficiencyKmpl.toFixed(1)) : '',
+    r.costPerKm ? Number(r.costPerKm.toFixed(2)) : '',
+    r.stationName || '',
+    r.isFullTank ? 'Yes' : 'No',
+    r.notes || '',
+  ]);
+
+  return generateCSV(headers, rows);
+}
+
+export function exportServiceRecordsToCSV(records: ServiceRecord[], distUnit = 'km'): string {
+  const headers = [
+    'Date & Time',
+    `Odometer (${distUnit})`,
+    'Service Categories',
+    'Total Cost',
+    'Workshop / Mechanic',
+    'Itemized Parts Replaced',
+    'Labor Cost',
+    'Notes',
+  ];
+
+  const rows = records.map(r => [
+    r.dateTime,
+    r.odometer,
+    r.serviceTypes.map(t => t.replace('_', ' ')).join(', '),
+    r.totalCost,
+    r.mechanicOrCenter || '',
+    r.parts?.map(p => `${p.name} (Qty: ${p.quantity || 1}, Cost: ${p.cost})`).join('; ') || '',
+    r.laborCost !== undefined ? r.laborCost : '',
+    r.notes || '',
+  ]);
+
+  return generateCSV(headers, rows);
+}
+
+export function exportExpensesToCSV(records: ExpenseRecord[]): string {
+  const headers = [
+    'Date & Time',
+    'Category',
+    'Title / Description',
+    'Amount Spent',
+    'Odometer',
+    'Expiry / Validity Date',
+    'Notes',
+  ];
+
+  const rows = records.map(r => [
+    r.dateTime,
+    r.category.toUpperCase().replace('_', ' '),
+    r.title,
+    r.amount,
+    r.odometer !== undefined ? r.odometer : '',
+    r.expiryDate || '',
+    r.notes || '',
+  ]);
+
+  return generateCSV(headers, rows);
 }
 

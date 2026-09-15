@@ -9,7 +9,7 @@ export interface DialogProps {
   title?: React.ReactNode;
   description?: React.ReactNode;
   children: React.ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
 }
 
 export function Dialog({
@@ -54,6 +54,8 @@ export function Dialog({
             'sm:max-w-lg': maxWidth === 'lg',
             'sm:max-w-xl': maxWidth === 'xl',
             'sm:max-w-2xl': maxWidth === '2xl',
+            'sm:max-w-3xl': maxWidth === '3xl',
+            'sm:max-w-4xl': maxWidth === '4xl',
           }
         )}
       >

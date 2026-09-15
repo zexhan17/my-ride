@@ -14,6 +14,7 @@ import {
   Trash2,
   TrendingUp,
   Search,
+  Download,
 } from 'lucide-react';
 import { formatAmount, formatDistance, formatDateTime, formatEfficiency } from '../lib/utils';
 import type { FuelRecord } from '../types';
@@ -23,7 +24,7 @@ interface FuelPageProps {
 }
 
 export function FuelPage({ onOpenAddFuel }: FuelPageProps) {
-  const { fuelRecords, activeVehicle, settings, metrics, deleteFuelRecord } = useVehicle();
+  const { fuelRecords, activeVehicle, settings, metrics, deleteFuelRecord, exportFuelCSV } = useVehicle();
   const [searchQuery, setSearchQuery] = useState('');
 
   if (!activeVehicle) return null;
@@ -65,10 +66,25 @@ export function FuelPage({ onOpenAddFuel }: FuelPageProps) {
           </p>
         </div>
 
-        <Button variant="default" onClick={onOpenAddFuel} className="gap-2 shrink-0 h-9">
-          <Plus className="w-3.5 h-3.5" />
-          <span>Log Petrol Fill</span>
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {fuelRecords.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportFuelCSV}
+              className="gap-1.5 text-xs h-9"
+              title="Download fuel logs spreadsheet"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </Button>
+          )}
+
+          <Button variant="default" onClick={onOpenAddFuel} className="gap-2 shrink-0 h-9">
+            <Plus className="w-3.5 h-3.5" />
+            <span>Log Petrol Fill</span>
+          </Button>
+        </div>
       </div>
 
       {/* Fuel Metrics Strip */}

@@ -17,6 +17,8 @@ import { ExpenseLogModal } from './components/modals/ExpenseLogModal';
 import { ReminderModal } from './components/modals/ReminderModal';
 import { VehicleModal } from './components/modals/VehicleModal';
 import { VehicleManagerModal } from './components/modals/VehicleManagerModal';
+import { ServiceDossierModal } from './components/modals/ServiceDossierModal';
+import { DocumentVaultModal } from './components/modals/DocumentVaultModal';
 import type { Vehicle } from './types';
 
 function AppContent() {
@@ -30,6 +32,8 @@ function AppContent() {
   const [isAddReminderOpen, setIsAddReminderOpen] = useState(false);
   const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
   const [isManageVehiclesOpen, setIsManageVehiclesOpen] = useState(false);
+  const [isDossierOpen, setIsDossierOpen] = useState(false);
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [vehicleToEdit, setVehicleToEdit] = useState<Vehicle | null>(null);
 
   const handleOpenEditVehicle = (veh: Vehicle) => {
@@ -78,6 +82,8 @@ function AppContent() {
               setVehicleToEdit(null);
               setIsAddVehicleOpen(true);
             }}
+            onOpenDossier={() => setIsDossierOpen(true)}
+            onOpenVault={() => setIsVaultOpen(true)}
             onEditVehicle={handleOpenEditVehicle}
             onNavigate={setCurrentPage}
           />
@@ -88,7 +94,10 @@ function AppContent() {
         )}
 
         {currentPage === 'service' && (
-          <ServicePage onOpenAddService={() => setIsAddServiceOpen(true)} />
+          <ServicePage
+            onOpenAddService={() => setIsAddServiceOpen(true)}
+            onOpenDossier={() => setIsDossierOpen(true)}
+          />
         )}
 
         {currentPage === 'expenses' && (
@@ -147,6 +156,16 @@ function AppContent() {
           setIsAddVehicleOpen(true);
         }}
         onEditVehicle={handleOpenEditVehicle}
+      />
+
+      <ServiceDossierModal
+        isOpen={isDossierOpen}
+        onClose={() => setIsDossierOpen(false)}
+      />
+
+      <DocumentVaultModal
+        isOpen={isVaultOpen}
+        onClose={() => setIsVaultOpen(false)}
       />
     </div>
   );
