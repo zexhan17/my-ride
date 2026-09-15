@@ -43,22 +43,12 @@ export function VehicleCard({ vehicle, onEdit }: VehicleCardProps) {
   const color = vehicle.colorHex || '#38bdf8';
 
   return (
-    <Card className="relative overflow-hidden border-border bg-card">
-      {/* Subtle top accent bar in the vehicle's chosen color */}
-      <div className="h-1.5 w-full" style={{ backgroundColor: color }} />
-
+    <Card className="border-border bg-card">
       <div className="p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           {/* Vehicle Info Header */}
           <div className="flex items-start gap-3.5 min-w-0">
-            <div
-              className="w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 transition-transform"
-              style={{
-                backgroundColor: `${color}18`,
-                color: color,
-                borderColor: `${color}45`,
-              }}
-            >
+            <div className="w-11 h-11 rounded-xl border border-border bg-muted flex items-center justify-center text-foreground shrink-0">
               {getVehicleTypeIcon(vehicle.type)}
             </div>
 

@@ -177,8 +177,8 @@ export function DocumentVaultPage({ onBack }: DocumentVaultPageProps) {
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
                   className={`text-xs px-2.5 py-1 rounded-md transition-colors whitespace-nowrap ${activeCategory === cat.id
-                      ? 'bg-foreground text-background font-semibold'
-                      : 'bg-muted/60 text-muted-foreground hover:text-foreground'
+                    ? 'bg-foreground text-background font-semibold'
+                    : 'bg-muted/60 text-muted-foreground hover:text-foreground'
                     }`}
                 >
                   {cat.label}
@@ -354,10 +354,10 @@ export function DocumentVaultPage({ onBack }: DocumentVaultPageProps) {
                           <span className="text-muted-foreground">Expires: {formatDate(doc.expiryDate)}</span>
                           <span
                             className={`ml-auto font-semibold px-1.5 py-0.5 rounded ${daysInfo.isOverdue
-                                ? 'text-destructive bg-destructive/10'
-                                : daysInfo.days <= 30
-                                  ? 'text-amber-500 bg-amber-500/10'
-                                  : 'text-muted-foreground bg-muted'
+                              ? 'text-destructive bg-destructive/10'
+                              : daysInfo.days <= 30
+                                ? 'text-amber-500 bg-amber-500/10'
+                                : 'text-muted-foreground bg-muted'
                               }`}
                           >
                             {daysInfo.label}

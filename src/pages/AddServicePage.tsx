@@ -223,8 +223,8 @@ export function AddServicePage({ onBack }: AddServicePageProps) {
                       type="button"
                       onClick={() => toggleType(opt.id)}
                       className={`text-xs px-3 py-1.5 rounded-lg border transition-all select-none touch-manipulation active:scale-95 cursor-pointer ${isSelected
-                          ? 'border-foreground bg-muted text-foreground font-semibold shadow-xs'
-                          : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                        ? 'border-foreground bg-muted text-foreground font-semibold shadow-xs'
+                        : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/50'
                         }`}
                     >
                       {opt.label}
