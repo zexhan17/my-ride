@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   FileText,
   ArrowLeft,
+  Download,
 } from 'lucide-react';
 import { formatAmount, formatDistance, formatDate, formatEfficiency } from '../lib/utils';
 import type { Vehicle } from '../types';
@@ -23,7 +24,7 @@ interface ServiceDossierPageProps {
 }
 
 export function ServiceDossierPage({ onBack, vehicle: propVehicle }: ServiceDossierPageProps) {
-  const { activeVehicle, serviceRecords, metrics, settings } = useVehicle();
+  const { activeVehicle, serviceRecords, metrics, settings, downloadVehicleTransferPackage } = useVehicle();
 
   const currentVehicle = propVehicle || activeVehicle;
   if (!currentVehicle) return null;
@@ -34,8 +35,8 @@ export function ServiceDossierPage({ onBack, vehicle: propVehicle }: ServiceDoss
 
   return (
     <div className="max-w-4xl mx-auto space-y-4 pb-32 sm:pb-20">
-      {/* Top Back Navigation Bar & Print Action (hidden during print) */}
-      <div className="flex items-center justify-between print:hidden">
+      {/* Top Back Navigation Bar & Actions (hidden during print) */}
+      <div className="flex items-center justify-between print:hidden gap-2 flex-wrap">
         <Button
           variant="ghost"
           size="sm"
@@ -46,14 +47,27 @@ export function ServiceDossierPage({ onBack, vehicle: propVehicle }: ServiceDoss
           <span>Back</span>
         </Button>
 
-        <Button
-          size="sm"
-          onClick={handlePrint}
-          className="gap-1.5 text-xs font-semibold h-8"
-        >
-          <Printer className="w-3.5 h-3.5" />
-          <span>Print / Save PDF</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => downloadVehicleTransferPackage(currentVehicle.id)}
+            className="gap-1.5 text-xs h-8"
+            title="Download full history package for new buyer / transfer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download Transfer Package (.JSON)</span>
+          </Button>
+
+          <Button
+            size="sm"
+            onClick={handlePrint}
+            className="gap-1.5 text-xs font-semibold h-8"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print / Save PDF</span>
+          </Button>
+        </div>
       </div>
 
       {/* Dossier Document Container */}
@@ -74,7 +88,7 @@ export function ServiceDossierPage({ onBack, vehicle: propVehicle }: ServiceDoss
                 {currentVehicle.name}
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {currentVehicle.make} {currentVehicle.model} {currentVehicle.year ? `(${currentVehicle.year})` : ''} • Plate: <span className="font-mono font-bold text-foreground">{currentVehicle.registrationNumber || 'N/A'}</span>
+                {currentVehicle.make ? `${currentVehicle.make} ` : ''}{currentVehicle.model || currentVehicle.type} • Plate: <span className="font-mono font-bold text-foreground">{currentVehicle.registrationNumber || 'N/A'}</span>
               </p>
             </div>
 
@@ -217,3 +231,4 @@ export function ServiceDossierPage({ onBack, vehicle: propVehicle }: ServiceDoss
     </div>
   );
 }
+

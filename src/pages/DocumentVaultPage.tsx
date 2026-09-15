@@ -176,11 +176,10 @@ export function DocumentVaultPage({ onBack }: DocumentVaultPageProps) {
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`text-xs px-2.5 py-1 rounded-md transition-colors whitespace-nowrap ${
-                    activeCategory === cat.id
+                  className={`text-xs px-2.5 py-1 rounded-md transition-colors whitespace-nowrap ${activeCategory === cat.id
                       ? 'bg-foreground text-background font-semibold'
                       : 'bg-muted/60 text-muted-foreground hover:text-foreground'
-                  }`}
+                    }`}
                 >
                   {cat.label}
                 </button>
@@ -354,13 +353,12 @@ export function DocumentVaultPage({ onBack }: DocumentVaultPageProps) {
                           <Calendar className="w-3 h-3 text-muted-foreground" />
                           <span className="text-muted-foreground">Expires: {formatDate(doc.expiryDate)}</span>
                           <span
-                            className={`ml-auto font-semibold px-1 rounded ${
-                              daysInfo.isOverdue
+                            className={`ml-auto font-semibold px-1 rounded ${daysInfo.isOverdue
                                 ? 'text-destructive bg-destructive/10'
                                 : daysInfo.days <= 30
-                                ? 'text-amber-500 bg-amber-500/10'
-                                : 'text-muted-foreground'
-                            }`}
+                                  ? 'text-amber-500 bg-amber-500/10'
+                                  : 'text-muted-foreground'
+                              }`}
                           >
                             {daysInfo.label}
                           </span>
@@ -453,3 +451,4 @@ export function DocumentVaultPage({ onBack }: DocumentVaultPageProps) {
     </div>
   );
 }
+

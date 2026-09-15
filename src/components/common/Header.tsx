@@ -83,7 +83,8 @@ export function Header({
                 className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-border bg-card hover:bg-muted text-foreground text-xs sm:text-sm font-medium transition-colors max-w-[200px] sm:max-w-[280px]"
               >
                 <div
-                  className="w-2 h-2 rounded-full shrink-0 bg-foreground/70"
+                  className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-border"
+                  style={{ backgroundColor: activeVehicle.colorHex || '#38bdf8' }}
                 />
                 <span className="truncate font-medium text-left">
                   {activeVehicle.name}
@@ -121,6 +122,10 @@ export function Header({
                           }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
+                          <div
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: v.colorHex || '#38bdf8' }}
+                          />
                           {getVehicleIcon(v.type)}
                           <div className="min-w-0">
                             <p className="truncate text-xs">{v.name}</p>

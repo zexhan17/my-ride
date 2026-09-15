@@ -35,13 +35,11 @@ export function VehicleFormPage({ vehicleToEdit, onBack }: VehicleFormPageProps)
   const [type, setType] = useState<VehicleType>('bike');
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
-  const [year, setYear] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [colorHex, setColorHex] = useState('#38bdf8');
   const [fuelType, setFuelType] = useState<FuelType>('petrol');
   const [tankCapacityLiters, setTankCapacityLiters] = useState('');
   const [currentOdometer, setCurrentOdometer] = useState('');
-  const [purchaseDate, setPurchaseDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -50,25 +48,21 @@ export function VehicleFormPage({ vehicleToEdit, onBack }: VehicleFormPageProps)
       setType(vehicleToEdit.type);
       setMake(vehicleToEdit.make);
       setModel(vehicleToEdit.model);
-      setYear(vehicleToEdit.year ? String(vehicleToEdit.year) : '');
       setRegistrationNumber(vehicleToEdit.registrationNumber);
       setColorHex(vehicleToEdit.colorHex || '#38bdf8');
       setFuelType(vehicleToEdit.fuelType);
       setTankCapacityLiters(vehicleToEdit.tankCapacityLiters ? String(vehicleToEdit.tankCapacityLiters) : '');
       setCurrentOdometer(String(vehicleToEdit.currentOdometer));
-      setPurchaseDate(vehicleToEdit.purchaseDate || '');
     } else {
       setName('');
       setType('bike');
       setMake('');
       setModel('');
-      setYear(String(new Date().getFullYear()));
       setRegistrationNumber('');
       setColorHex('#38bdf8');
       setFuelType('petrol');
       setTankCapacityLiters('13');
       setCurrentOdometer('0');
-      setPurchaseDate('');
     }
   }, [vehicleToEdit]);
 
@@ -82,7 +76,6 @@ export function VehicleFormPage({ vehicleToEdit, onBack }: VehicleFormPageProps)
 
     const currOdoNum = parseFloat(currentOdometer) || 0;
     const tankNum = tankCapacityLiters ? parseFloat(tankCapacityLiters) : undefined;
-    const yearNum = year ? parseInt(year, 10) : undefined;
 
     try {
       setIsSubmitting(true);
@@ -93,14 +86,14 @@ export function VehicleFormPage({ vehicleToEdit, onBack }: VehicleFormPageProps)
           type,
           make: make.trim(),
           model: model.trim(),
-          year: yearNum,
+          year: vehicleToEdit.year,
           registrationNumber: registrationNumber.trim().toUpperCase(),
           colorHex,
           fuelType,
           tankCapacityLiters: tankNum,
           initialOdometer: vehicleToEdit.initialOdometer ?? 0,
           currentOdometer: currOdoNum,
-          purchaseDate: purchaseDate || undefined,
+          purchaseDate: vehicleToEdit.purchaseDate,
         });
         success('Vehicle updated!', name);
       } else {
@@ -109,14 +102,12 @@ export function VehicleFormPage({ vehicleToEdit, onBack }: VehicleFormPageProps)
           type,
           make: make.trim(),
           model: model.trim(),
-          year: yearNum,
           registrationNumber: registrationNumber.trim().toUpperCase(),
           colorHex,
           fuelType,
           tankCapacityLiters: tankNum,
           initialOdometer: 0,
           currentOdometer: currOdoNum,
-          purchaseDate: purchaseDate || undefined,
         });
         success('New vehicle added to your garage!', name);
       }
@@ -197,27 +188,33 @@ export function VehicleFormPage({ vehicleToEdit, onBack }: VehicleFormPageProps)
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Color Badge</label>
+                <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                  <span>Color Badge</span>
+                  <span
+                    className="w-2.5 h-2.5 rounded-full inline-block ring-1 ring-border shadow-xs"
+                    style={{ backgroundColor: colorHex }}
+                  />
+                </label>
                 <div className="flex items-center gap-1.5 flex-wrap pt-1">
                   {COLOR_PRESETS.map(hex => (
                     <button
                       type="button"
                       key={hex}
                       onClick={() => setColorHex(hex)}
-                      className={`w-6 h-6 rounded-full transition-transform ${
-                        colorHex === hex
-                          ? 'scale-125 ring-2 ring-primary ring-offset-2 ring-offset-background'
+                      className={`w-6 h-6 rounded-full transition-transform ${colorHex === hex
+                          ? 'scale-125 ring-2 ring-foreground ring-offset-2 ring-offset-background'
                           : 'hover:scale-110 opacity-80'
-                      }`}
+                        }`}
                       style={{ backgroundColor: hex }}
+                      aria-label={`Select color ${hex}`}
                     />
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Make, Model & Year */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Make & Model (Simplified 2-column) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-foreground">Make / Brand</label>
                 <Input
@@ -233,17 +230,6 @@ export function VehicleFormPage({ vehicleToEdit, onBack }: VehicleFormPageProps)
                   placeholder="e.g. Hunter 350, Duke 390"
                   value={model}
                   onChange={e => setModel(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Manufacturing Year</label>
-                <Input
-                  type="number"
-                  placeholder="e.g. 2024"
-                  value={year}
-                  onChange={e => setYear(e.target.value)}
-                  className="font-mono"
                 />
               </div>
             </div>
@@ -282,7 +268,7 @@ export function VehicleFormPage({ vehicleToEdit, onBack }: VehicleFormPageProps)
               </div>
             </div>
 
-            {/* Tank Capacity & Purchase Date */}
+            {/* Tank Capacity & Current Odometer */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-foreground">
@@ -299,30 +285,20 @@ export function VehicleFormPage({ vehicleToEdit, onBack }: VehicleFormPageProps)
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Purchase / Delivery Date</label>
+                <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                  <Gauge className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>Current Meter Reading ({settings.distanceUnit}) *</span>
+                </label>
                 <Input
-                  type="date"
-                  value={purchaseDate}
-                  onChange={e => setPurchaseDate(e.target.value)}
+                  type="number"
+                  step="any"
+                  placeholder="e.g. 5000"
+                  value={currentOdometer}
+                  onChange={e => setCurrentOdometer(e.target.value)}
+                  className="font-mono font-medium"
+                  required
                 />
               </div>
-            </div>
-
-            {/* Current Odometer */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                <Gauge className="w-3.5 h-3.5 text-muted-foreground" />
-                <span>Current Meter Reading ({settings.distanceUnit}) *</span>
-              </label>
-              <Input
-                type="number"
-                step="any"
-                placeholder="e.g. 5000"
-                value={currentOdometer}
-                onChange={e => setCurrentOdometer(e.target.value)}
-                className="font-mono font-medium"
-                required
-              />
             </div>
 
             {/* Form Actions */}
@@ -340,3 +316,4 @@ export function VehicleFormPage({ vehicleToEdit, onBack }: VehicleFormPageProps)
     </div>
   );
 }
+

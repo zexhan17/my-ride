@@ -291,3 +291,4 @@ export function AddFuelPage({ onBack }: AddFuelPageProps) {
     </div>
   );
 }
+

@@ -511,10 +511,93 @@ export async function exportAllDataAsJSON(): Promise<string> {
   return JSON.stringify(backupData, null, 2);
 }
 
+export async function exportSingleVehicleAsJSON(vehicleId: string): Promise<string> {
+  const vehicle = await db.vehicles.get(vehicleId);
+  if (!vehicle) throw new Error('Vehicle not found in database.');
+
+  const fuelRecords = await db.fuelRecords.where('vehicleId').equals(vehicleId).toArray();
+  const serviceRecords = await db.serviceRecords.where('vehicleId').equals(vehicleId).toArray();
+  const expenseRecords = await db.expenseRecords.where('vehicleId').equals(vehicleId).toArray();
+  const reminders = await db.reminders.where('vehicleId').equals(vehicleId).toArray();
+  const documents = await db.documents.where('vehicleId').equals(vehicleId).toArray();
+  const componentWear = await db.componentWear.where('vehicleId').equals(vehicleId).toArray();
+
+  const transferPackage = {
+    appName: 'MyRide',
+    type: 'SINGLE_VEHICLE_TRANSFER_PACKAGE',
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    vehicle,
+    fuelRecords,
+    serviceRecords,
+    expenseRecords,
+    reminders,
+    documents,
+    componentWear,
+  };
+
+  return JSON.stringify(transferPackage, null, 2);
+}
+
+export async function importSingleVehicleFromJSON(jsonString: string): Promise<{ success: boolean; message: string; vehicleId?: string; vehicleName?: string }> {
+  try {
+    const parsed = JSON.parse(jsonString);
+    if (!parsed) throw new Error('Invalid file format.');
+
+    // Single vehicle transfer package
+    if (parsed.vehicle && (parsed.type === 'SINGLE_VEHICLE_TRANSFER_PACKAGE' || parsed.vehicle.name)) {
+      const v = parsed.vehicle;
+      const fuelRecords = Array.isArray(parsed.fuelRecords) ? parsed.fuelRecords : [];
+      const serviceRecords = Array.isArray(parsed.serviceRecords) ? parsed.serviceRecords : [];
+      const expenseRecords = Array.isArray(parsed.expenseRecords) ? parsed.expenseRecords : [];
+      const reminders = Array.isArray(parsed.reminders) ? parsed.reminders : [];
+      const documents = Array.isArray(parsed.documents) ? parsed.documents : [];
+      const componentWear = Array.isArray(parsed.componentWear) ? parsed.componentWear : [];
+
+      await db.transaction('rw', [db.vehicles, db.fuelRecords, db.serviceRecords, db.expenseRecords, db.reminders, db.documents, db.componentWear, db.settings], async () => {
+        await db.vehicles.put(v);
+        if (fuelRecords.length > 0) await db.fuelRecords.bulkPut(fuelRecords);
+        if (serviceRecords.length > 0) await db.serviceRecords.bulkPut(serviceRecords);
+        if (expenseRecords.length > 0) await db.expenseRecords.bulkPut(expenseRecords);
+        if (reminders.length > 0) await db.reminders.bulkPut(reminders);
+        if (documents.length > 0) await db.documents.bulkPut(documents);
+        if (componentWear.length > 0) await db.componentWear.bulkPut(componentWear);
+
+        const existingSettings = await db.settings.get(DEFAULT_SETTINGS.id);
+        await db.settings.put({
+          ...(existingSettings || DEFAULT_SETTINGS),
+          activeVehicleId: v.id,
+        });
+      });
+
+      return {
+        success: true,
+        message: `Imported "${v.name}" and full service history into your garage!`,
+        vehicleId: v.id,
+        vehicleName: v.name,
+      };
+    }
+
+    // Fallback to full database import if it's a full backup
+    return await importAllDataFromJSON(jsonString);
+  } catch (err: any) {
+    return { success: false, message: err.message || 'Failed to import vehicle history.' };
+  }
+}
+
 export async function importAllDataFromJSON(jsonString: string): Promise<{ success: boolean; message: string }> {
   try {
     const parsed = JSON.parse(jsonString);
-    if (!parsed || !parsed.data) {
+    if (!parsed) {
+      throw new Error('Invalid backup file format.');
+    }
+
+    // Check if it is a single-vehicle package
+    if (parsed.vehicle && (parsed.type === 'SINGLE_VEHICLE_TRANSFER_PACKAGE' || parsed.vehicle.name)) {
+      return await importSingleVehicleFromJSON(jsonString);
+    }
+
+    if (!parsed.data) {
       throw new Error('Invalid backup file format.');
     }
 

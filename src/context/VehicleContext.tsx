@@ -8,6 +8,7 @@ import {
   DEMO_VEHICLE_IDS,
   exportAllDataAsJSON,
   importAllDataFromJSON,
+  exportSingleVehicleAsJSON,
   exportFuelRecordsToCSV,
   exportServiceRecordsToCSV,
   exportExpensesToCSV,
@@ -126,6 +127,8 @@ interface VehicleContextType {
   exportServiceCSV: () => void;
   exportExpensesCSV: () => void;
   shareBackupData: () => Promise<boolean>;
+  exportVehicleTransferPackage: (vehicleId?: string) => Promise<string>;
+  downloadVehicleTransferPackage: (vehicleId?: string) => Promise<void>;
 }
 
 const VehicleContext = createContext<VehicleContextType | undefined>(undefined);
@@ -828,6 +831,24 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
     }
   }, [exportData]);
 
+  // Single Vehicle Transfer Package
+  const exportVehicleTransferPackage = useCallback(async (vehicleId?: string) => {
+    const targetId = vehicleId || activeVehicleId;
+    if (!targetId) throw new Error('No vehicle selected');
+    return await exportSingleVehicleAsJSON(targetId);
+  }, [activeVehicleId]);
+
+  const downloadVehicleTransferPackage = useCallback(async (vehicleId?: string) => {
+    const targetId = vehicleId || activeVehicleId;
+    if (!targetId) return;
+    const veh = allVehicles.find(v => v.id === targetId) || activeVehicle;
+    const name = veh ? veh.name.replace(/\s+/g, '_') : 'Vehicle';
+    const jsonString = await exportSingleVehicleAsJSON(targetId);
+    const dateStr = new Date().toISOString().split('T')[0];
+    const filename = `${name}_Complete_Ownership_History_${dateStr}.json`;
+    downloadBlob(jsonString, filename, 'application/json');
+  }, [activeVehicleId, allVehicles, activeVehicle]);
+
   return (
     <VehicleContext.Provider
       value={{
@@ -890,6 +911,8 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
         exportServiceCSV,
         exportExpensesCSV,
         shareBackupData,
+        exportVehicleTransferPackage,
+        downloadVehicleTransferPackage,
       }}
     >
       {children}

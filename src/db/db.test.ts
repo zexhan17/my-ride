@@ -5,6 +5,8 @@ import {
   removeSampleData,
   exportAllDataAsJSON,
   importAllDataFromJSON,
+  exportSingleVehicleAsJSON,
+  importSingleVehicleFromJSON,
   exportFuelRecordsToCSV,
   exportServiceRecordsToCSV,
   exportExpensesToCSV,
@@ -154,6 +156,54 @@ describe('Dexie Database & Storage Layer', () => {
   it('should handle invalid JSON import gracefully', async () => {
     const result = await importAllDataFromJSON('invalid json content');
     expect(result.success).toBe(false);
+  });
+
+  it('should export single vehicle history transfer package and import it cleanly', async () => {
+    // 1. Seed data
+    await seedSampleData();
+    const vehicles = await db.vehicles.toArray();
+    const hunter = vehicles.find(v => v.name.includes('Hunter'))!;
+    expect(hunter).toBeDefined();
+
+    // 2. Export single vehicle transfer package
+    const transferJson = await exportSingleVehicleAsJSON(hunter.id);
+    expect(typeof transferJson).toBe('string');
+
+    const parsed = JSON.parse(transferJson);
+    expect(parsed.appName).toBe('MyRide');
+    expect(parsed.type).toBe('SINGLE_VEHICLE_TRANSFER_PACKAGE');
+    expect(parsed.version).toBe(2);
+    expect(parsed.vehicle.id).toBe(hunter.id);
+    expect(parsed.fuelRecords.length).toBeGreaterThan(0);
+    expect(parsed.serviceRecords.length).toBeGreaterThan(0);
+    expect(parsed.documents.length).toBeGreaterThan(0);
+
+    // 3. Clear DB completely
+    await db.vehicles.clear();
+    await db.fuelRecords.clear();
+    await db.serviceRecords.clear();
+    await db.expenseRecords.clear();
+    await db.documents.clear();
+    expect(await db.vehicles.count()).toBe(0);
+
+    // 4. Import single vehicle package
+    const importRes = await importSingleVehicleFromJSON(transferJson);
+    expect(importRes.success).toBe(true);
+    expect(importRes.vehicleName).toBe(hunter.name);
+
+    // 5. Verify restored single vehicle and its related records
+    const importedVehicles = await db.vehicles.toArray();
+    expect(importedVehicles.length).toBe(1);
+    expect(importedVehicles[0].id).toBe(hunter.id);
+
+    const importedFuel = await db.fuelRecords.toArray();
+    expect(importedFuel.length).toBe(parsed.fuelRecords.length);
+
+    const importedServices = await db.serviceRecords.toArray();
+    expect(importedServices.length).toBe(parsed.serviceRecords.length);
+
+    const importedDocs = await db.documents.toArray();
+    expect(importedDocs.length).toBe(parsed.documents.length);
   });
 
   it('should generate properly formatted CSV exports for fuel, services, and expenses', () => {

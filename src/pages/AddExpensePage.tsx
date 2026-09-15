@@ -279,3 +279,4 @@ export function AddExpensePage({ onBack }: AddExpensePageProps) {
     </div>
   );
 }
+

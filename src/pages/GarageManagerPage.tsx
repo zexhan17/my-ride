@@ -15,6 +15,7 @@ import {
   Fuel,
   ArrowLeft,
   Sparkles,
+  Download,
 } from 'lucide-react';
 import { formatDistance } from '../lib/utils';
 import type { Vehicle } from '../types';
@@ -38,6 +39,7 @@ export function GarageManagerPage({
     hasDemoData,
     removeSampleData,
     settings,
+    downloadVehicleTransferPackage,
   } = useVehicle();
   const { success, error, info } = useToast();
 
@@ -147,11 +149,10 @@ export function GarageManagerPage({
                 return (
                   <div
                     key={v.id}
-                    className={`p-4 rounded-xl border transition-all ${
-                      isActive
+                    className={`p-4 rounded-xl border transition-all ${isActive
                         ? 'border-foreground bg-muted/40 shadow-xs'
                         : 'border-border bg-card hover:bg-muted/20'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0">
@@ -181,7 +182,7 @@ export function GarageManagerPage({
                           </div>
 
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {v.make} {v.model} {v.year ? `• ${v.year}` : ''}
+                            {v.make ? `${v.make} ` : ''}{v.model || v.type}
                           </p>
 
                           <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
@@ -216,6 +217,19 @@ export function GarageManagerPage({
                         <Button
                           size="icon"
                           variant="ghost"
+                          onClick={() => {
+                            downloadVehicleTransferPackage(v.id);
+                            success(`Transfer dossier downloaded for ${v.name}`);
+                          }}
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          title="Download Ownership Transfer Dossier (.JSON)"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </Button>
+
+                        <Button
+                          size="icon"
+                          variant="ghost"
                           onClick={() => onEditVehicle(v)}
                           className="h-8 w-8 text-muted-foreground hover:text-foreground"
                           title="Edit Vehicle"
@@ -244,3 +258,4 @@ export function GarageManagerPage({
     </div>
   );
 }
+

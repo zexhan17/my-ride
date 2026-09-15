@@ -222,11 +222,10 @@ export function AddServicePage({ onBack }: AddServicePageProps) {
                       key={opt.id}
                       type="button"
                       onClick={() => toggleType(opt.id)}
-                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors select-none ${
-                        isSelected
+                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors select-none ${isSelected
                           ? 'border-foreground bg-muted text-foreground font-medium'
                           : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                      }`}
+                        }`}
                     >
                       {opt.label}
                     </button>
@@ -366,3 +365,4 @@ export function AddServicePage({ onBack }: AddServicePageProps) {
     </div>
   );
 }
+
